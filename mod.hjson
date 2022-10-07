@@ -1,23 +1,25 @@
 #the mod name as displayed in-game
-displayName: "Java Mod Template"
+displayName: "Bridging assistant"
 
 #the internal name of your mod
-name: "example-java-mod"
+name: "bridge-assist"
 
 #your name
-author: "You"
+author: "Mars"
 
 #the fully qualified main class of the mod
-main: "example.ExampleJavaMod"
+main: "me.mars.ModMain2"
 
 #the mod description as seen in the mod dialog
-description: "A Mindustry Java mod template."
+description: "Displays all bridge links. Helps with bridge weaving"
 
 #the mod version
 version: 1.0
 
 #the minimum game build required to run this mod
-minGameVersion: 129
+minGameVersion: 136
 
 #this is a java mod
 java: true
+
+hidden: true
