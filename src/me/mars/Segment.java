@@ -15,6 +15,7 @@ import arc.struct.Seq;
 import arc.util.*;
 import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
+import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.world.blocks.distribution.ItemBridge;
 import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
@@ -22,7 +23,7 @@ import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
 import static mindustry.Vars.tilesize;
 
 public class Segment implements QuadTree.QuadTreeObject {
-	private static int seed = Mathf.random(360);
+	private static final int seed = Mathf.random(1, 1000);
 	private static Seq<Segment> tmpSeq = new Seq<>();
 	private static ObjectSet<Segment> tmpSet = new ObjectSet<>();
 
@@ -79,7 +80,10 @@ public class Segment implements QuadTree.QuadTreeObject {
 			ModMain2.getTree(1-(this.linkDir() % 2)).intersect(this.end.tileX(), this.end.tileY(), 1, 1, tmpSeq);
 			this.next = tmpSeq.find(segment -> segment.passing.contains(this.end.pos()));
 		}
+	}
 
+	public void postUpdate() {
+		// Set the last segment
 		this.endSegment = this;
 		ObjectSet<Segment> passed = tmpSet;
 		passed.clear();
@@ -89,10 +93,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 			endSeg = endSeg.next;
 		}
 		this.endSegment = endSeg;
-
-	}
-
-	public void updateMax() {
+		// Updating max
 		this.max = this.currentSize;
 		setRect(this.start.tileX(), this.start.tileY(), this.end.tileX(), this.end.tileY(), Tmp.r1);
 		ModMain2.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
@@ -111,7 +112,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 				100, 100);
 	}
 
-	public static void setRect(int x, int y, int x2, int y2, Rect out) { // Non inclusive
+	static void setRect(int x, int y, int x2, int y2, Rect out) { // Non inclusive
 		out.set(x, y, x2-x, y2-y);
 		out.normalize();
 		out.width++;
@@ -188,6 +189,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 			y+=maxYOffset;
 		}
 		// Actually drawing
+		Lines.stroke(1f);
 		Draw.color(this.endSegment.color, ModMain2.lineOpacity/100f);
 		Draw.z(Layer.overlayUI);
 		Lines.line(x, y, x2, y2);
@@ -202,9 +204,16 @@ public class Segment implements QuadTree.QuadTreeObject {
 		for (int i = 0; i < arrows; i++) {
 			Draw.rect(Core.atlas.white(),
 					Mathf.lerp(x, x2, (alpha + i)/arrows), Mathf.lerp(y, y2, (alpha + i)/arrows), 1, 1);
-
 		}
-		Draw.color();
+		Draw.reset();
+	}
+
+	public void drawHighlight() {
+		Draw.color(this.endSegment.color, 0.5f);
+		for (int i = 0; i < this.passing.size; i++) {
+			int pos = this.passing.items[i];
+			Lines.square((float)Point2.x(pos)*tilesize, (float)Point2.y(pos)*tilesize, 3f);
+		}
 	}
 
 	@Override

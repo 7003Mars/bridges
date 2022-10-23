@@ -3,10 +3,10 @@ package me.mars;
 import arc.Core;
 import arc.Events;
 import arc.func.Cons;
-import arc.math.Mathf;
 import arc.math.geom.Point2;
 import arc.math.geom.QuadTree;
 import arc.math.geom.Rect;
+import arc.math.geom.Vec2;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.layout.Table;
 import arc.struct.IntIntMap;
@@ -44,7 +44,6 @@ public class ModMain2 extends Mod {
 	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges on the current world
 	public static ItemBridge currentSelection = null;
 
-//	private static Seq<ItemBridgeBuild> waitList = new Seq<>();
 	private static Seq<Runnable> queue = new Seq<>();
 	public static IntIntMap lastConfigs = new IntIntMap();
 
@@ -89,13 +88,23 @@ public class ModMain2 extends Mod {
 
 		Events.run(Trigger.uiDrawBegin, () -> {
 			if (Vars.state.isGame() && currentSelection != null) {
-//				Core.input.mouseWorld();
 				Rect camBounds = Tmp.r1;
 				camBounds.setSize(Core.camera.width/tilesize, Core.camera.height/tilesize);
 				camBounds.setCenter(Core.camera.position.x/tilesize, Core.camera.position.y/tilesize);
-				both(quadTree -> quadTree.intersect(camBounds, segment -> {
-					if (segment.block == currentSelection) segment.draw();
-				}));
+				Rect hitbox = Tmp.r2;
+
+				Vec2 mouseCoords = Core.input.mouseWorld();
+				int mouseX = Math.round(mouseCoords.x/tilesize), mouseY = Math.round(mouseCoords.y/tilesize);
+				for (Segment segment : allSegments) {
+					if (segment.block != currentSelection) continue;
+					segment.hitbox(hitbox);
+					if (camBounds.overlaps(hitbox)) {
+						segment.draw();
+						if (segment.passing.contains(Point2.pack(mouseX, mouseY))) {
+							segment.drawHighlight();
+						}
+					}
+				}
 			}
 		});
 
@@ -249,7 +258,7 @@ public class ModMain2 extends Mod {
 			segment.occupied.clear();
 		});
 		allSegments.forEach(Segment::update);
-		allSegments.forEach(Segment::updateMax);
+		allSegments.forEach(Segment::postUpdate);
 	}
 
 	public static void reloadSegments() {
