@@ -36,16 +36,16 @@ public class ModMain2 extends Mod {
 	static Rect bounds = new Rect(0, 0, 0, 0);
 	public static QuadTree<Segment> vertSeg = new QuadTree<>(bounds);
 	public static QuadTree<Segment> horiSeg = new QuadTree<>(bounds);
-	public static Seq<Segment> allSegments = new Seq<>();
+	public static Seq<Segment> allSegments = new Seq<>(false);
 
 	// TODO: Yeah horrible. Valve pls fix
-	public static Seq<ItemBridgeBuild> allBridges = new Seq<>();
+	public static Seq<ItemBridgeBuild> bridgeCache = new Seq<>(false);
 
 	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges on the current world
 	public static ItemBridge currentSelection = null;
 
-	private static Seq<Runnable> queue = new Seq<>();
-	public static IntIntMap lastConfigs = new IntIntMap();
+//	private static Seq<Runnable> queue = new Seq<>();
+//	public static IntIntMap lastConfigs = new IntIntMap();
 
 	@Override
 	public void init() {
@@ -126,10 +126,10 @@ public class ModMain2 extends Mod {
 		});
 
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
-			if (blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge) allBridges.add(bridge);
+			if (blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge) bridgeCache.add(bridge);
 		});
 		Events.on(PayloadDropEvent.class, payloadDropEvent -> {
-			if (payloadDropEvent.build instanceof ItemBridgeBuild bridge) allBridges.add(bridge);
+			if (payloadDropEvent.build instanceof ItemBridgeBuild bridge) bridgeCache.add(bridge);
 		});
 
 		// TODO: Pain and suffering.
@@ -249,8 +249,8 @@ public class ModMain2 extends Mod {
 		// Jank here, clean up with the event based segments
 		both(QuadTree::clear);
 		allSegments.clear();
-		allBridges.filter(bridge -> bridge.isValid());
-		allBridges.forEach(ModMain2::formSegment);
+		bridgeCache.filter(bridge -> bridge.isValid());
+		bridgeCache.forEach(ModMain2::formSegment);
 
 		allSegments.forEach(segment -> {
 			segment.selfIndex = 0;
@@ -262,9 +262,10 @@ public class ModMain2 extends Mod {
 	}
 
 	public static void reloadSegments() {
+		Time.mark();
 		both(QuadTree::clear);
 		allSegments.clear();
-		Time.mark();
+		bridgeCache.clear();
 //		Core.app.post(() -> {
 			Vars.indexer.allBuildings(bounds.x+bounds.width/2, bounds.y+bounds.height/2,
 					Math.max(bounds.width, bounds.height), building -> {
@@ -273,7 +274,7 @@ public class ModMain2 extends Mod {
 							allSegments.add(seg);
 							getTree(seg.linkDir()).insert(seg);
 
-							allBridges.add(b);
+							bridgeCache.add(b);
 						}
 					});
 //		});

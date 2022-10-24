@@ -12,10 +12,11 @@ import arc.struct.Bits;
 import arc.struct.IntSeq;
 import arc.struct.ObjectSet;
 import arc.struct.Seq;
-import arc.util.*;
+import arc.util.Nullable;
+import arc.util.Time;
+import arc.util.Tmp;
 import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
-import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.world.blocks.distribution.ItemBridge;
 import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
@@ -101,8 +102,12 @@ public class Segment implements QuadTree.QuadTreeObject {
 		});
 		// Updating the offsets for drawing
 		int axis = this.linkDir() % 2;
-		this.xOffset = axis == 1 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize : 0;
-		this.yOffset = axis == 0 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize: 0;
+		// TODO: Massive mess
+		int emax = (this.max+1) & -2; // Rounding to next multiple of 2. Probably a better way to do this https://stackoverflow.com/a/9194117
+		this.xOffset = axis == 1 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
+		this.yOffset = axis == 0 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
+//		this.xOffset = axis == 1 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize : 0;
+//		this.yOffset = axis == 0 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize: 0;
 	}
 
 	public void updateEnd() {
@@ -209,6 +214,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 	}
 
 	public void drawHighlight() {
+		Draw.z(Layer.overlayUI+0.1f);
 		Draw.color(this.endSegment.color, 0.5f);
 		for (int i = 0; i < this.passing.size; i++) {
 			int pos = this.passing.items[i];
