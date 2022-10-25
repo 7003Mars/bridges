@@ -68,7 +68,6 @@ public class Segment implements QuadTree.QuadTreeObject {
 		this.selfIndex = index;
 		intersecting.forEach(segment -> {
 			if (index > segment.currentSize) {
-//				Log.warn("Size @ changed to @", currentSize, index);
 				this.currentSize = index;
 			}
 			segment.occupied.set(index, true);
@@ -106,8 +105,6 @@ public class Segment implements QuadTree.QuadTreeObject {
 		int emax = (this.max+1) & -2; // Rounding to next multiple of 2. Probably a better way to do this https://stackoverflow.com/a/9194117
 		this.xOffset = axis == 1 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
 		this.yOffset = axis == 0 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
-//		this.xOffset = axis == 1 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize : 0;
-//		this.yOffset = axis == 0 ? ((float) this.selfIndex / this.max) * tilesize - 0.5f * tilesize: 0;
 	}
 
 	public void updateEnd() {
@@ -123,18 +120,6 @@ public class Segment implements QuadTree.QuadTreeObject {
 		out.width++;
 		out.height++;
 	}
-
-//	public static ItemBridgeBuild getEnd(ItemBridgeBuild start) {
-////		ItemBridgeBuild next = (ItemBridgeBuild) Vars.world.build(start.link);
-//		ItemBridgeBuild next = start;
-////		if (next == null) return null;
-//		int startDir = linkDir(start);
-//
-//		while (Vars.world.build(next.link) instanceof ItemBridgeBuild nextLink && next != nextLink && linkDir(next) == startDir) {
-//			next = nextLink;
-//		}
-//		return next;
-//	}
 
 	public static ItemBridgeBuild getEnd(ItemBridgeBuild start, IntSeq bridges) {
 		ItemBridgeBuild next = start;
@@ -194,28 +179,31 @@ public class Segment implements QuadTree.QuadTreeObject {
 			y+=maxYOffset;
 		}
 		// Actually drawing
-		Lines.stroke(1f);
+		float drawSize = Math.min(1f, (float)3/4*tilesize/this.max);
+		Lines.stroke(drawSize);
 		Draw.color(this.endSegment.color, ModMain2.lineOpacity/100f);
 		Draw.z(Layer.overlayUI);
 		Lines.line(x, y, x2, y2);
 		// Drawing the arrow(s)
 		int linkDist = (int) Mathf.dstm(this.start.tileX(), this.start.tileY(), lx, ly);
 //		float alpha = ((Time.time / 100f) % linkDist)/linkDist;
-		float alpha = ((Time.time / 2f) % 100)/100;
+		float alpha = (Time.time / 2f % 100)/100;
 		int arrows = Mathf.ceil((float) linkDist / this.block.range);
 
 		Draw.color(Draw.getColor().inv());
 		Draw.z(Layer.overlayUI+0.1f);
 		for (int i = 0; i < arrows; i++) {
 			Draw.rect(Core.atlas.white(),
-					Mathf.lerp(x, x2, (alpha + i)/arrows), Mathf.lerp(y, y2, (alpha + i)/arrows), 1, 1);
+					Mathf.lerp(x, x2, (alpha + i)/arrows), Mathf.lerp(y, y2, (alpha + i)/arrows), drawSize, drawSize);
 		}
 		Draw.reset();
 	}
 
 	public void drawHighlight() {
 		Draw.z(Layer.overlayUI+0.1f);
-		Draw.color(this.endSegment.color, 0.5f);
+		// Adding 3 pi by dice roll (or to sync it)
+		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 0.8f);
+		Draw.color(this.endSegment.color, alpha);
 		for (int i = 0; i < this.passing.size; i++) {
 			int pos = this.passing.items[i];
 			Lines.square((float)Point2.x(pos)*tilesize, (float)Point2.y(pos)*tilesize, 3f);
