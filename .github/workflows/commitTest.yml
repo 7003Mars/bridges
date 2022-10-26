@@ -22,3 +22,7 @@ jobs:
       with:
         name: ${{ github.event.repository.name }}
         path: build/libs/${{ github.event.repository.name }}.jar
+    - name: Upload as release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        file: build/libs/${{ github.event.repository.name }}.jar
