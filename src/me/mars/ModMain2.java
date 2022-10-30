@@ -11,10 +11,7 @@ import arc.math.geom.Vec2;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
-import arc.util.Log;
-import arc.util.Time;
-import arc.util.Timer;
-import arc.util.Tmp;
+import arc.util.*;
 import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
@@ -44,7 +41,7 @@ public class ModMain2 extends Mod {
 
 	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges on the current world
 	public static ItemBridge currentSelection = null;
-	private static Seq<Segment> hoverSelected = new Seq<>();
+	private static Seq<Segment> hoverSelected = new Seq<>(false, 8, Segment.class);
 
 //	private static Seq<Runnable> queue = new Seq<>();
 //	public static IntIntMap lastConfigs = new IntIntMap();
@@ -69,8 +66,7 @@ public class ModMain2 extends Mod {
 			lineOpacity = Core.settings.getInt("bridging-line-opacity");
 
 			Table table = new DragTable();
-			table.margin(50f);
-			table.bottom().left();
+			table.setSize(50f);
 			table.setPosition(0, Core.graphics.getHeight()/2);
 			TextureRegionDrawable blockRegion = new TextureRegionDrawable(Icon.none);
 			table.button(blockRegion, () -> {
@@ -110,8 +106,11 @@ public class ModMain2 extends Mod {
 					hoverSelected.get(0).drawHighlight();
 				} else if (hoverSelected.size > 1) {
 					int index = (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4));
-					hoverSelected.sort(segment -> segment.start.pos());
-					hoverSelected.get(index).drawHighlight();
+					// For Select, index starts at 1
+					Select.instance().select(hoverSelected.items, Structs.comparingFloat(segment -> segment.start.pos()),
+							index+1, hoverSelected.size).drawHighlight();
+//					hoverSelected.sort(segment -> segment.start.pos());
+//					hoverSelected.get(index).drawHighlight();
 				}
 			}
 		});
