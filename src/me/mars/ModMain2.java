@@ -30,6 +30,7 @@ import static mindustry.Vars.tilesize;
 public class ModMain2 extends Mod {
 	public static boolean debugMode;
 	public static int lineOpacity;
+	public static boolean fixedColor;
 
 	static Rect bounds = new Rect(0, 0, 0, 0);
 	public static QuadTree<Segment> vertSeg = new QuadTree<>(bounds);
@@ -58,12 +59,14 @@ public class ModMain2 extends Mod {
 
 		Vars.ui.settings.addCategory("Bridging", settingsTable -> {
 			// TODO: Bundles
-			settingsTable.checkPref("bridging-debug-mode", false);
 			settingsTable.sliderPref("bridging-line-opacity", 70, 10, 100, i -> i+"%");
+			settingsTable.checkPref("bridging-fixed-highlight-color", false);
+			settingsTable.checkPref("bridging-debug-mode", false);
 		});
 		Events.on(ClientLoadEvent.class, event -> {
 			debugMode = Core.settings.getBool("bridging-debug-mode");
 			lineOpacity = Core.settings.getInt("bridging-line-opacity");
+			fixedColor = Core.settings.getBool("bridging-fixed-highlight-color");
 
 			Table table = new DragTable();
 			table.setSize(50f);
@@ -116,8 +119,10 @@ public class ModMain2 extends Mod {
 		});
 
 		Timer.schedule(() -> {
+			// Settings
 			debugMode = Core.settings.getBool("bridging-debug-mode");
 			lineOpacity = Core.settings.getInt("bridging-line-opacity");
+			fixedColor = Core.settings.getBool("bridging-fixed-highlight-color");
 
 			if (debugMode) Time.mark();
 			update();

@@ -18,6 +18,7 @@ import arc.util.Tmp;
 import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
 import mindustry.graphics.Layer;
+import mindustry.graphics.Pal;
 import mindustry.world.blocks.distribution.ItemBridge;
 import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
 
@@ -203,7 +204,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		Draw.z(Layer.overlayUI+0.1f);
 		// Adding 3 pi by dice roll (or to sync it)
 		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 0.8f);
-		Draw.color(this.endSegment.color, alpha);
+		Draw.color(ModMain2.fixedColor ? Pal.accent : this.endSegment.color, alpha);
 		for (int i = 0; i < this.passing.size; i++) {
 			int pos = this.passing.items[i];
 			Lines.square((float)Point2.x(pos)*tilesize, (float)Point2.y(pos)*tilesize, 3f);
