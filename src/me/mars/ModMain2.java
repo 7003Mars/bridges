@@ -294,9 +294,7 @@ public class ModMain2 extends Mod {
 	}
 
 	public static boolean linkValid(ItemBridgeBuild build) {
-		if (build.link == -1) return false;
-		Building link = Vars.world.build(build.link);
-		return link != null && build.block == link.block && link != build;
+		return ((ItemBridge)build.block).linkValid(build.tile, Vars.world.tile(build.link));
 	}
 
 	public static boolean segHead(ItemBridgeBuild build) {
