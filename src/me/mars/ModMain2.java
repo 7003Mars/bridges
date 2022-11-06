@@ -12,10 +12,8 @@ import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
 import arc.util.*;
-import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
-import mindustry.gen.Building;
 import mindustry.gen.Icon;
 import mindustry.mod.Mod;
 import mindustry.world.Block;
@@ -49,8 +47,8 @@ public class ModMain2 extends Mod {
 
 	@Override
 	public void init() {
-
 		if (Vars.headless) return;
+
 		for (Block block : Vars.content.blocks()) {
 			if (/*Vars.indexer.isBlockPresent(block) && */block instanceof ItemBridge bridge) {
 				bridgeBlocks.add(bridge);
@@ -281,11 +279,11 @@ public class ModMain2 extends Mod {
 //		Core.app.post(() -> {
 			Vars.indexer.allBuildings(bounds.x+bounds.width/2, bounds.y+bounds.height/2,
 					Math.max(bounds.width, bounds.height), building -> {
-						if (building instanceof ItemBridge.ItemBridgeBuild b && segHead(b) && linkValid(b)) {
+						if (building instanceof ItemBridgeBuild b) bridgeCache.add(b);
+						if (building instanceof ItemBridgeBuild b && segHead(b) && linkValid(b)) {
 							Segment seg = new Segment(b);
 							allSegments.add(seg);
 							getTree(seg.linkDir()).insert(seg);
-							bridgeCache.add(b);
 						}
 					});
 //		});
