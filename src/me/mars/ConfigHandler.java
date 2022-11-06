@@ -38,7 +38,7 @@ public class ConfigHandler {
 
 
 		checkers.put(BufferedItemBridgeBuild.class,
-				(b1, b2) -> ((ItemBridge)b1.block).linkValid(b1.tile(), b2.tile()));
+				(b1, b2) -> ((ItemBridge)b1.block).linkValid(b1.tile(), b2.tile(), false));
 		checkers.put(MassDriverBuild.class,
 				(b1, b2) -> b1.block == b2.block && b1.team == b2.team && ((MassDriver)b1.block).range > b1.dst(b2));
 
