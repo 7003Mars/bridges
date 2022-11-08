@@ -49,7 +49,7 @@ public class ModMain2 extends Mod {
 	public void init() {
 		if (Vars.headless) return;
 
-		ConfigHandler.init();
+		if (!Vars.mobile)ConfigHandler.init();
 		for (Block block : Vars.content.blocks()) {
 			if (/*Vars.indexer.isBlockPresent(block) && */block instanceof ItemBridge bridge) {
 				bridgeBlocks.add(bridge);
