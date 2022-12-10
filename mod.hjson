@@ -2,7 +2,7 @@
 displayName: "Bridging assistant"
 
 #the internal name of your mod
-name: "bridge-assist"
+name: "bridging"
 
 #your name
 author: "Mars"
@@ -14,7 +14,7 @@ main: "me.mars.ModMain2"
 description: "Displays all bridge links. Helps with bridge weaving"
 
 #the mod version
-version: 1.0.2
+version: 1.1.2
 
 #the minimum game build required to run this mod
 minGameVersion: 136

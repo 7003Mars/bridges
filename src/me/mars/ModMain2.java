@@ -55,16 +55,16 @@ public class ModMain2 extends Mod {
 			}
 		}
 
-		Vars.ui.settings.addCategory("Bridging", settingsTable -> {
+		Vars.ui.settings.addCategory(Core.bundle.get("setting.bridging.name"), settingsTable -> {
 			// TODO: Bundles
-			settingsTable.sliderPref("bridging-line-opacity", 70, 10, 100, i -> i+"%");
-			settingsTable.checkPref("bridging-fixed-highlight-color", false);
-			settingsTable.checkPref("bridging-debug-mode", false);
+			settingsTable.sliderPref("bridging.line-opacity", 70, 10, 100, i -> i+"%");
+			settingsTable.checkPref("bridging.fixed-highlight-color", false);
+			settingsTable.checkPref("bridging.debug-mode", false);
 		});
 		Events.on(ClientLoadEvent.class, event -> {
-			debugMode = Core.settings.getBool("bridging-debug-mode");
-			lineOpacity = Core.settings.getInt("bridging-line-opacity");
-			fixedColor = Core.settings.getBool("bridging-fixed-highlight-color");
+			lineOpacity = Core.settings.getInt("bridging.line-opacity");
+			fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
+			debugMode = Core.settings.getBool("bridging.debug-mode");
 
 			Table table = new DragTable();
 			table.setSize(50f);
@@ -118,9 +118,9 @@ public class ModMain2 extends Mod {
 
 		Timer.schedule(() -> {
 			// Settings
-			debugMode = Core.settings.getBool("bridging-debug-mode");
-			lineOpacity = Core.settings.getInt("bridging-line-opacity");
-			fixedColor = Core.settings.getBool("bridging-fixed-highlight-color");
+			lineOpacity = Core.settings.getInt("bridging.line-opacity");
+			fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
+			debugMode = Core.settings.getBool("bridging.debug-mode");
 
 			if (debugMode) Time.mark();
 			update();
