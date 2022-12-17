@@ -44,6 +44,7 @@ public class ModMain2 extends Mod {
 
 	private static float time;
 	private static Seq<Runnable> queue = new Seq<>();
+	private static Seq<Runnable> queue2 = new Seq<>();
 	public static IntIntMap lastConfigs = new IntIntMap();
 	@Override
 	public void init() {
@@ -69,7 +70,7 @@ public class ModMain2 extends Mod {
 
 			Table table = new DragTable();
 			table.setSize(50f);
-			table.setPosition(0, Core.graphics.getHeight()/2);
+			table.setPosition(0, Core.graphics.getHeight()/2f);
 			TextureRegionDrawable blockRegion = new TextureRegionDrawable(Icon.none);
 			table.button(blockRegion, () -> {
 				int index = bridgeBlocks.indexOf(currentSelection);
@@ -174,6 +175,10 @@ public class ModMain2 extends Mod {
 
 		// Wait 1 tick for incoming to be updated
 		Events.run(Trigger.update, () -> {
+			queue2.each(Runnable::run);
+			queue2.clear();
+			queue2.addAll(queue);
+			queue.clear();
 			time+=Time.delta;
 			if (time >= ticksPerUpdate) {
 				// Settings
@@ -186,8 +191,6 @@ public class ModMain2 extends Mod {
 				if (debugMode) Vars.ui.showInfoToast("Took " + Time.elapsed() + " ms to update", 1);
 				time-=ticksPerUpdate;
 			}
-			queue.each(Runnable::run);
-			queue.clear();
 		});
 	}
 
