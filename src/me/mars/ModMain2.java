@@ -138,7 +138,6 @@ public class ModMain2 extends Mod {
 
 			// Form for disconnected
 			int lastConfig = lastConfigs.get(bridge.pos(), -1); //
-//			if (lastConfig != -1) formSegment(lastConfig);
 			if (Vars.world.build(lastConfig) instanceof ItemBridgeBuild oldLink) {
 //				if (oldLink.incoming.contains(bridge.pos())) Log.info("Removing");
 				oldLink.incoming.removeValue(bridge.pos());
@@ -318,7 +317,7 @@ public class ModMain2 extends Mod {
 		if (segHead(bridge) && linkValid(bridge)) {
 			Segment found = findSeg(bridge.tileX(), bridge.tileY(), Segment.linkDir(bridge));
 			if (found != null) {
-				found.update();
+				updateEnd(found);
 			} else {
 				Segment seg = new Segment(bridge);
 				allSegments.add(seg);
