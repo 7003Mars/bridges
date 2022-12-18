@@ -168,9 +168,9 @@ public class Segment implements QuadTree.QuadTreeObject {
 		if (incomingP.any()) {
 			// what the hell
 			if (linkAxis == 0) {
-				maxXOffset = lx > this.start.tileX() ? tilesize/2 : -tilesize/2;
+				maxXOffset = lx > this.start.tileX() ? tilesize/2f : -tilesize/2f;
 			} else {
-				maxYOffset = ly > this.start.tileY() ? tilesize/2 : -tilesize/2;
+				maxYOffset = ly > this.start.tileY() ? tilesize/2f : -tilesize/2f;
 			}
 			for (Segment segment : incomingP) {
 				if (linkAxis == 0 && lx > this.start.tileX() == segment.xOffset < maxXOffset) maxXOffset = segment.xOffset;
@@ -180,17 +180,22 @@ public class Segment implements QuadTree.QuadTreeObject {
 			y+=maxYOffset;
 		}
 		// Actually drawing
+		Draw.z(Layer.overlayUI);
+		Draw.color(this.endSegment.color, ModMain2.lineOpacity/100f);
 		float drawSize = Math.min(1f, (float)3/4*tilesize/this.max);
 		Lines.stroke(drawSize);
-		Draw.color(this.endSegment.color, ModMain2.lineOpacity/100f);
-		Draw.z(Layer.overlayUI);
+		// The line
 		Lines.line(x, y, x2, y2);
+		// Draw dots
+		for (int i = 0; i < this.passing.size; i++) {
+			int pos = this.passing.items[i];
+			Draw.rect(Core.atlas.white(), Point2.x(pos)*tilesize + this.xOffset, Point2.y(pos)*tilesize + this.yOffset, drawSize*1.3f, drawSize*1.3f);
+		}
 		// Drawing the arrow(s)
 		int linkDist = (int) Mathf.dstm(this.start.tileX(), this.start.tileY(), lx, ly);
 //		float alpha = ((Time.time / 100f) % linkDist)/linkDist;
 		float alpha = (Time.time / 2f % 100)/100;
 		int arrows = Mathf.ceil((float) linkDist / this.block.range);
-
 		Draw.color(Draw.getColor().inv());
 		Draw.z(Layer.overlayUI+0.1f);
 		for (int i = 0; i < arrows; i++) {
