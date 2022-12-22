@@ -31,11 +31,11 @@ public class ModMain2 extends Mod {
 	public static boolean debugMode;
 	public static int lineOpacity;
 	public static boolean fixedColor;
-	public static int ticksPerUpdate = 10;
+	private static final int ticksPerUpdate = 10;
 
 	static Rect bounds = new Rect(0, 0, 0, 0);
-	public static QuadTree<Segment> vertSeg = new QuadTree<>(bounds);
-	public static QuadTree<Segment> horiSeg = new QuadTree<>(bounds);
+	public static QuadTree<Segment> vertSeg;
+	public static QuadTree<Segment> horiSeg;
 	public static Seq<Segment> allSegments = new Seq<>(false);
 
 	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges on the current world
@@ -179,7 +179,7 @@ public class ModMain2 extends Mod {
 			queue2.addAll(queue);
 			queue.clear();
 			time+=Time.delta;
-			if (time >= ticksPerUpdate) {
+			if (time >= ticksPerUpdate && state.isPlaying()) {
 				// Settings
 				lineOpacity = Core.settings.getInt("bridging.line-opacity");
 				fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
@@ -187,7 +187,14 @@ public class ModMain2 extends Mod {
 
 				if (debugMode) Time.mark();
 				update();
-				if (debugMode) Vars.ui.showInfoToast("Took " + Time.elapsed() + " ms to update", 1);
+				if (debugMode) {
+					int seqInvalid = allSegments.count(segment -> !segment.valid());
+					Seq<Segment> treeSegs = new Seq<>();
+					both(tree -> tree.getObjects(treeSegs));
+					int treeInvalid = treeSegs.count(segment -> !segment.valid());
+					Vars.ui.showInfoToast("Took " + Time.elapsed() + " ms to update\nInvalid: "
+							+ seqInvalid + ":" + treeInvalid, ticksPerUpdate/60f);
+				}
 				time-=ticksPerUpdate;
 			}
 		});
@@ -247,8 +254,6 @@ public class ModMain2 extends Mod {
 	}
 
 	public static void update() {
-		if (!Vars.state.isPlaying()) return;
-
 		allSegments.each(segment -> {
 			segment.selfIndex = 0;
 			segment.currentSize = 4;
@@ -260,14 +265,17 @@ public class ModMain2 extends Mod {
 
 	static void updateEnd(Segment segment) {
 		QuadTree<Segment> tree = getTree(segment.linkDir());
-		tree.remove(segment);
+		if (!tree.remove(segment)) Log.warn("Failed to remove");
 		segment.updateEnd();
 		tree.insert(segment);
 	}
 
 	public static void reloadSegments() {
 		Time.mark();
-		both(QuadTree::clear);
+		queue.clear();
+		queue2.clear();
+		horiSeg = new QuadTree<>(bounds);
+		vertSeg = new QuadTree<>(bounds);
 		allSegments.clear();
 		Groups.build.each(building -> {
 			if (!(building instanceof ItemBridgeBuild b)) return;
