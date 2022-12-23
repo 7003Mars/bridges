@@ -45,7 +45,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 	//REMOVEME
 	public int max = currentSize;
 	// Ensure this seq is ordered
-	public IntSeq passing = new IntSeq();
+	public IntSeq passing = new IntSeq(4);
 
 	public Segment(ItemBridgeBuild start) {
 		

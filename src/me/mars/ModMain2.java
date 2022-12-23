@@ -242,21 +242,17 @@ public class ModMain2 extends Mod {
 		}
 		// Update those linked to the bridge.
 		both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, segment -> {
-			ItemBridgeBuild oldEnd = segment.end;
 			// Jank
 			int removeIndex = segment.passing.indexOf(bridge.pos());
-			if (removeIndex > 0) {
+			if (removeIndex > 1) {
 				// Segment hitbox changed, update tree
-				tree.remove(segment);
 				segment.end = (ItemBridgeBuild) Vars.world.build(segment.passing.items[removeIndex-1]);
 				segment.passing.setSize(removeIndex);
 				tree.insert(segment);
-			}
-			if (!segment.valid()) {
-				segment.end = oldEnd; // Needed as QuadTree#remove needs the Segment hitbox
-				tree.remove(segment);
+			} else if (removeIndex != -1){
 				allSegments.remove(segment);
-			}}));
+			}
+		}));
 	}
 
 	public static void update() {
