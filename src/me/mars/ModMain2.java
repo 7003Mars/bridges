@@ -240,19 +240,27 @@ public class ModMain2 extends Mod {
 			link.incoming.removeValue(bridge.pos());
 			formSegment(link);
 		}
+		both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, s -> Log.info("found: @", s)));
 		// Update those linked to the bridge.
-		both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, segment -> {
-			// Jank
-			int removeIndex = segment.passing.indexOf(bridge.pos());
-			if (removeIndex > 1) {
-				// Segment hitbox changed, update tree
-				segment.end = (ItemBridgeBuild) Vars.world.build(segment.passing.items[removeIndex-1]);
-				segment.passing.setSize(removeIndex);
-				tree.insert(segment);
-			} else if (removeIndex != -1){
-				allSegments.remove(segment);
-			}
-		}));
+		Seq<Segment> intersected = new Seq<>();
+		both(tree -> {
+			intersected.clear();
+			tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, intersected);
+			intersected.each(segment -> {
+				// Jank
+				Log.info("Intersected @", segment);
+				int removeIndex = segment.passing.indexOf(bridge.pos());
+				tree.remove(segment);
+				if (removeIndex > 1) {
+					// Segment hitbox changed, update tree
+					segment.end = (ItemBridgeBuild) Vars.world.build(segment.passing.items[removeIndex-1]);
+					segment.passing.setSize(removeIndex);
+					tree.insert(segment);
+				} else if (removeIndex != -1){
+					allSegments.remove(segment);
+				}
+			});
+		});
 	}
 
 	public static void update() {
