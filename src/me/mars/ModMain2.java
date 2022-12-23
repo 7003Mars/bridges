@@ -172,7 +172,7 @@ public class ModMain2 extends Mod {
 			lastConfigs.put(bridge.pos(), (int) configEvent.value);
 		});
 
-		// Wait 1 tick for incoming to be updated
+		// Wait 2(?) ticks for incoming to be updated
 		Events.run(Trigger.update, () -> {
 			queue2.each(Runnable::run);
 			queue2.clear();
@@ -200,27 +200,34 @@ public class ModMain2 extends Mod {
 		});
 	}
 
-	public static void bridgeBuilt(ItemBridgeBuild bridge) {
+	static void bridgeBuilt(ItemBridgeBuild bridge) {
+		lastConfigs.put(bridge.pos(), bridge.link);
 		queue.add(() -> {
-			lastConfigs.put(bridge.pos(), bridge.link);
-			// Form for link
-			Segment segment = findSegStrict(Point2.x(bridge.link), Point2.y(bridge.link), Segment.linkDir(bridge));
-			if (segment == null) {
-				formSegment(bridge);
-			} else {
-				segment.start = bridge;
-				updateEnd(segment);
-			}
 			// Form for incoming
 			for (int i = 0; i < bridge.incoming.size; i++) {
 				int pos = bridge.incoming.items[i];
 				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, ModMain2::updateEnd));
 				formSegment(pos);
 			}
+			// Form for link
+			Segment segment = findSegStrict(Point2.x(bridge.link), Point2.y(bridge.link), Segment.linkDir(bridge));
+			if (segment == null) {
+				formSegment(bridge);
+			} else {
+				QuadTree<Segment> tree = getTree(segment.linkDir());
+				tree.remove(segment);
+				segment.start = bridge;
+				if (!segHead(bridge)) {
+					allSegments.remove(segment);
+					return;
+				}
+				segment.updateEnd();
+				tree.insert(segment);
+			}
 		});
 	}
 
-	public static void bridgeRemoved(ItemBridgeBuild bridge) {
+	static void bridgeRemoved(ItemBridgeBuild bridge) {
 		lastConfigs.remove(bridge.pos());
 		// Remove itself
 		Segment self = findSeg(bridge.tileX(), bridge.tileY(), Segment.linkDir(bridge));
@@ -246,7 +253,6 @@ public class ModMain2 extends Mod {
 				tree.insert(segment);
 			}
 			if (!segment.valid()) {
-				// REMOVEME
 				segment.end = oldEnd; // Needed as QuadTree#remove needs the Segment hitbox
 				tree.remove(segment);
 				allSegments.remove(segment);
@@ -265,6 +271,7 @@ public class ModMain2 extends Mod {
 
 	static void updateEnd(Segment segment) {
 		QuadTree<Segment> tree = getTree(segment.linkDir());
+		// REMOVEME: Some day.
 		if (!tree.remove(segment)) Log.warn("Failed to remove");
 		segment.updateEnd();
 		tree.insert(segment);
