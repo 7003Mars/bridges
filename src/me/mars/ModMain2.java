@@ -28,6 +28,8 @@ import static mindustry.Vars.*;
 
 
 public class ModMain2 extends Mod {
+	private final static String internalName = "bridging";
+
 	public static boolean debugMode;
 	public static int lineOpacity;
 	public static boolean fixedColor;
@@ -49,7 +51,7 @@ public class ModMain2 extends Mod {
 	@Override
 	public void init() {
 		if (Vars.headless) return;
-
+		Log.info("@ running version [red]@",internalName, mods.getMod(internalName).meta.version);
 		if (!Vars.mobile)ConfigHandler.init();
 		for (Block block : Vars.content.blocks()) {
 			if (/*Vars.indexer.isBlockPresent(block) && */block instanceof ItemBridge bridge) {

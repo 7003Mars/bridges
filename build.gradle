@@ -5,7 +5,7 @@ version '1.0'
 targetCompatibility = 8
 sourceCompatibility = JavaVersion.VERSION_16
 
-sourceSets.main.java.srcDirs = ["src"]
+sourceSets.main.java.srcDirs = ["src", "$buildDir/gen"]
 
 repositories{
     mavenCentral()
@@ -59,8 +59,21 @@ jar{
         configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }
     }
 
-    from(rootDir){
-        include "mod.hjson"
+    if (project.hasProperty("modVer")) {
+        copy {
+            from "mod.hjson"
+            into "$buildDir/gen/"
+            filter {
+                return it.startsWith("version") ? "version:${project.property("modVer")}" : it;
+            }
+        }
+        from("$buildDir/gen") {
+            include "mod.hjson"
+        }
+    } else {
+        from(rootDir) {
+            include "mod.hjson"
+        }
     }
 
     from("assets/"){
