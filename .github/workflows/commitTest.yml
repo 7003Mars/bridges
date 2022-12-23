@@ -18,7 +18,7 @@ jobs:
         distribution: 'zulu'
         cache: 'gradle'
     - name: Build mod jar
-      run: ./gradlew deploy
+      run: ./gradlew deploy -PmodVer=${{startsWith(github.ref, 'refs/tags/') && github.ref_name || github.run_number}}
     - name: Upload built jar file
       uses: actions/upload-artifact@v2
       with:
