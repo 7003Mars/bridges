@@ -27,7 +27,7 @@ import static mindustry.Vars.*;
 //import arc.util.noise.Noise;
 
 
-public class ModMain2 extends Mod {
+public class Bridges extends Mod {
 	private final static String internalName = "bridging";
 
 	public static boolean debugMode;
@@ -208,7 +208,7 @@ public class ModMain2 extends Mod {
 			// Form for incoming
 			for (int i = 0; i < bridge.incoming.size; i++) {
 				int pos = bridge.incoming.items[i];
-				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, ModMain2::updateEnd));
+				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, Bridges::updateEnd));
 				formSegment(pos);
 			}
 			// Form for link

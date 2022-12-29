@@ -59,7 +59,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		Bits free = new Bits();
 		setRect(this.start.tileX(), this.start.tileY(), this.end.tileX(), this.end.tileY(), Tmp.r1);
 		Seq<Segment> intersecting = new Seq<>();
-		ModMain2.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
+		Bridges.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
 			if (segment.block == this.block && (segment.linkDir() == this.linkDir() || segment.end != this.end)) {
 				intersecting.add(segment);
 			}
@@ -74,11 +74,11 @@ public class Segment implements QuadTree.QuadTreeObject {
 			segment.occupied.set(index, true);
 		});
 		// Updating end and next segments
-		this.next = ModMain2.findSeg(this.end.tileX(), this.end.tileY(), 1 - this.linkDir() % 2);
+		this.next = Bridges.findSeg(this.end.tileX(), this.end.tileY(), 1 - this.linkDir() % 2);
 		if (this.next == null) {
 			// This segment may be connected to the middle of another segment
 			tmpSeq.clear();
-			ModMain2.getTree(1-(this.linkDir() % 2)).intersect(this.end.tileX(), this.end.tileY(), 1, 1, tmpSeq);
+			Bridges.getTree(1-(this.linkDir() % 2)).intersect(this.end.tileX(), this.end.tileY(), 1, 1, tmpSeq);
 			this.next = tmpSeq.find(segment -> segment.passing.contains(this.end.pos()));
 		}
 	}
@@ -97,7 +97,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		// Updating max
 		this.max = this.currentSize;
 		setRect(this.start.tileX(), this.start.tileY(), this.end.tileX(), this.end.tileY(), Tmp.r1);
-		ModMain2.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
+		Bridges.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
 			if (segment.currentSize > this.max) this.max = segment.currentSize;
 		});
 		// Updating the offsets for drawing
@@ -137,7 +137,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 
 	public boolean valid() {
 		return this.start.isValid() && this.end != this.start && this.end.isValid()
-				&& ModMain2.segHead(this.start) && ModMain2.linkValid(this.start) /*&& (ModMain2.linkValid(this.end) || ModMain2.segHead(this.end))*/;
+				&& Bridges.segHead(this.start) && Bridges.linkValid(this.start) /*&& (ModMain2.linkValid(this.end) || ModMain2.segHead(this.end))*/;
 	}
 
 	public byte linkDir() {
@@ -149,7 +149,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 	}
 
 	public void draw() {
-		if (ModMain2.debugMode) Vars.ui.showLabel(this.selfIndex+":"+this.max, 0.1f, this.start.x, this.start.y);
+		if (Bridges.debugMode) Vars.ui.showLabel(this.selfIndex+":"+this.max, 0.1f, this.start.x, this.start.y);
 		int linkAxis = this.linkDir() % 2;
 		float x = this.start.x+this.xOffset, y = this.start.y+this.yOffset;
 		float lx = this.end.tileX(), ly = this.end.tileY();
@@ -162,7 +162,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		}
 		// Add max tail offset
 		Seq<Segment> incomingP = tmpSeq.clear();
-		ModMain2.getTree(1-linkAxis).intersect(this.start.tileX(), this.start.tileY(), 1, 1, incomingP);
+		Bridges.getTree(1-linkAxis).intersect(this.start.tileX(), this.start.tileY(), 1, 1, incomingP);
 		incomingP.filter(segment -> segment.end.pos() == this.start.pos());
 		float maxXOffset = 0, maxYOffset = 0;
 		if (incomingP.any()) {
@@ -181,7 +181,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		}
 		// Actually drawing
 		Draw.z(Layer.overlayUI);
-		Draw.color(this.endSegment.color, ModMain2.lineOpacity/100f);
+		Draw.color(this.endSegment.color, Bridges.lineOpacity/100f);
 		float drawSize = Math.min(1f, (float)3/4*tilesize/this.max);
 		Lines.stroke(drawSize);
 		// The line
@@ -209,7 +209,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		Draw.z(Layer.overlayUI+0.1f);
 		// Adding 3 pi by dice roll (or to sync it)
 		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 0.8f);
-		Draw.color(ModMain2.fixedColor ? Pal.accent : this.endSegment.color, alpha);
+		Draw.color(Bridges.fixedColor ? Pal.accent : this.endSegment.color, alpha);
 		for (int i = 0; i < this.passing.size; i++) {
 			int pos = this.passing.items[i];
 			Lines.square((float)Point2.x(pos)*tilesize, (float)Point2.y(pos)*tilesize, 3f);

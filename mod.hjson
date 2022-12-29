@@ -8,7 +8,7 @@ name: "bridging"
 author: "Mars"
 
 #the fully qualified main class of the mod
-main: "me.mars.ModMain2"
+main: "me.mars.Bridges"
 
 #the mod description as seen in the mod dialog
 description: "Displays all bridge links. Helps with bridge weaving"
