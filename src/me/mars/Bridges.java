@@ -135,18 +135,32 @@ public class Bridges extends Mod {
 			if (tileChangeEvent.tile.build instanceof ItemBridgeBuild bridge) bridgeBuilt(bridge);
 		});
 
+		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
+			if (!(blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge)) return;
+			// TODO: This may or may not fire late/early. It is an issue can't solve for now
+			if (blockBuildEndEvent.config == null) {
+				lastConfigs.remove(bridge.pos());
+				return;
+			}
+			lastConfigs.put(bridge.pos(), bridge.link);
+		});
+
 		Events.on(ConfigEvent.class, configEvent -> {
 			if (!(configEvent.tile instanceof ItemBridge.ItemBridgeBuild bridge)) return;
-
 			// Form for disconnected
 			int lastConfig = lastConfigs.get(bridge.pos(), -1); //
 			if (Vars.world.build(lastConfig) instanceof ItemBridgeBuild oldLink) {
-//				if (oldLink.incoming.contains(bridge.pos())) Log.info("Removing");
 				oldLink.incoming.removeValue(bridge.pos());
 				formSegment(oldLink);
 			}
 			// Form for new connection
-			if (Vars.world.build((int) configEvent.value) instanceof ItemBridgeBuild link) {
+			int linkVal = -1;
+			if (configEvent.value instanceof Integer) {
+				linkVal = (int) configEvent.value;
+			} else if (configEvent.value instanceof Point2 point) {
+				linkVal = Point2.pack(point.x + bridge.tileX(), point.y + bridge.tileY());
+			}
+			if (Vars.world.build(linkVal) instanceof ItemBridgeBuild link) {
 				bridge.updateTile();
 				link.incoming.add(bridge.pos());
 				if (!segHead(link)) {
@@ -171,7 +185,7 @@ public class Bridges extends Mod {
 					allSegments.remove(segment);
 				}
 			}));
-			lastConfigs.put(bridge.pos(), (int) configEvent.value);
+			lastConfigs.put(bridge.pos(), linkVal);
 		});
 
 		// Wait 2(?) ticks for incoming to be updated
@@ -203,7 +217,8 @@ public class Bridges extends Mod {
 	}
 
 	static void bridgeBuilt(ItemBridgeBuild bridge) {
-		lastConfigs.put(bridge.pos(), bridge.link);
+		// TODO: Unknown if this is properly updated.
+//		queue2.add(() -> lastConfigs.put(bridge.pos(), bridge.link));
 		queue.add(() -> {
 			// Form for incoming
 			for (int i = 0; i < bridge.incoming.size; i++) {
@@ -292,6 +307,7 @@ public class Bridges extends Mod {
 		allSegments.clear();
 		Groups.build.each(building -> {
 			if (!(building instanceof ItemBridgeBuild b)) return;
+			if (b.link != -1) lastConfigs.put(b.pos(), b.link);
 			formSegment(b);
 
 		});
