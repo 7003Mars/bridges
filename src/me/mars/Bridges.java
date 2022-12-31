@@ -257,7 +257,6 @@ public class Bridges extends Mod {
 			link.incoming.removeValue(bridge.pos());
 			formSegment(link);
 		}
-		both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, s -> Log.info("found: @", s)));
 		// Update those linked to the bridge.
 		Seq<Segment> intersected = new Seq<>();
 		both(tree -> {
@@ -265,7 +264,6 @@ public class Bridges extends Mod {
 			tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, intersected);
 			intersected.each(segment -> {
 				// Jank
-				Log.info("Intersected @", segment);
 				int removeIndex = segment.passing.indexOf(bridge.pos());
 				tree.remove(segment);
 				if (removeIndex > 1) {
