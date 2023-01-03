@@ -64,10 +64,10 @@ public class Segment implements QuadTree.QuadTreeObject {
 				intersecting.add(segment);
 			}
 		});
-		intersecting.forEach(segment -> free.or(segment.occupied));
+		intersecting.each(segment -> free.or(segment.occupied));
 		int index = free.nextClearBit(0);
 		this.selfIndex = index;
-		intersecting.forEach(segment -> {
+		intersecting.each(segment -> {
 			if (index > segment.currentSize) {
 				this.currentSize = index;
 			}
