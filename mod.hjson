@@ -14,7 +14,7 @@ main: "me.mars.Bridges"
 description: "Displays all bridge links. Helps with bridge weaving"
 
 #the mod version
-version: 1.1.9
+version: REPLACEME
 
 #the minimum game build required to run this mod
 minGameVersion: 136
