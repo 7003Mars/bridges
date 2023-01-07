@@ -186,18 +186,23 @@ public class Segment implements QuadTree.QuadTreeObject {
 		Lines.stroke(drawSize);
 		// The line
 		Lines.line(x, y, x2, y2);
-		// Draw dots
-		for (int i = 0; i < this.passing.size; i++) {
+		// Draw dots:
+		// First dot
+		Draw.rect(Core.atlas.white(), x, y, drawSize*1.3f, drawSize*1.3f);
+		// Middle dots
+		for (int i = 1; i < this.passing.size-1; i++) {
 			int pos = this.passing.items[i];
 			Draw.rect(Core.atlas.white(), Point2.x(pos)*tilesize + this.xOffset, Point2.y(pos)*tilesize + this.yOffset, drawSize*1.3f, drawSize*1.3f);
 		}
+		// Last dot
+		Draw.rect(Core.atlas.white(), x2, y2, drawSize*1.3f, drawSize*1.3f);
 		// Drawing the arrow(s)
 		int linkDist = (int) Mathf.dstm(this.start.tileX(), this.start.tileY(), lx, ly);
 //		float alpha = ((Time.time / 100f) % linkDist)/linkDist;
 		float alpha = (Time.time / 2f % 100)/100;
 		int arrows = Mathf.ceil((float) linkDist / this.block.range);
 		Draw.color(Draw.getColor().inv());
-		Draw.z(Layer.overlayUI+0.1f);
+		Draw.z(Layer.overlayUI+1f);
 		for (int i = 0; i < arrows; i++) {
 			Draw.rect(Core.atlas.white(),
 					Mathf.lerp(x, x2, (alpha + i)/arrows), Mathf.lerp(y, y2, (alpha + i)/arrows), drawSize, drawSize);
