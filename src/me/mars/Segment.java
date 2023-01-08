@@ -202,12 +202,11 @@ public class Segment implements QuadTree.QuadTreeObject {
 		float alpha = (Time.time / 2f % 100)/100;
 		int arrows = Mathf.ceil((float) linkDist / this.block.range);
 		Draw.color(Draw.getColor().inv());
-		Draw.z(Layer.overlayUI+1f);
+		Draw.z(Layer.overlayUI+0.1f);
 		for (int i = 0; i < arrows; i++) {
 			Draw.rect(Core.atlas.white(),
 					Mathf.lerp(x, x2, (alpha + i)/arrows), Mathf.lerp(y, y2, (alpha + i)/arrows), drawSize, drawSize);
 		}
-		Draw.reset();
 	}
 
 	public void drawHighlight() {

@@ -3,6 +3,7 @@ package me.mars;
 import arc.Core;
 import arc.Events;
 import arc.func.Cons;
+import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
 import arc.math.geom.Point2;
 import arc.math.geom.QuadTree;
@@ -15,6 +16,7 @@ import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
+import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Icon;
 import mindustry.mod.Mod;
@@ -89,7 +91,7 @@ public class Bridges extends Mod {
 
 		eventInit();
 
-		Events.run(Trigger.uiDrawBegin, () -> {
+		Events.run(Trigger.drawOver, () -> {
 			if (Vars.state.isGame() && currentSelection != null) {
 				Rect camBounds = Tmp.r1;
 				camBounds.setSize(Core.camera.width/tilesize, Core.camera.height/tilesize);
@@ -99,6 +101,7 @@ public class Bridges extends Mod {
 				Vec2 mouseCoords = Core.input.mouseWorld();
 				int mouseX = Math.round(mouseCoords.x/tilesize), mouseY = Math.round(mouseCoords.y/tilesize);
 				hoverSelected.clear();
+				float prevZ = Draw.z();
 				for (Segment segment : allSegments) {
 					if (segment.block != currentSelection) continue;
 					segment.hitbox(hitbox);
@@ -115,6 +118,8 @@ public class Bridges extends Mod {
 					Select.instance().select(hoverSelected.items, Structs.comparingFloat(segment -> segment.start.pos()),
 							index+1, hoverSelected.size).drawHighlight();
 				}
+				Draw.z(prevZ);
+				Draw.reset();
 			}
 		});
 	}
@@ -137,54 +142,53 @@ public class Bridges extends Mod {
 
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
 			if (!(blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge)) return;
-			// TODO: This may or may not fire late/early. It is an issue can't solve for now
+			// TODO: This may or may not fire late/early. It is an issue can't solve for now. Probably a source of bugs
 			if (blockBuildEndEvent.config == null) {
 				lastConfigs.remove(bridge.pos());
-				return;
-			}
-			lastConfigs.put(bridge.pos(), bridge.link);
+			} else if (blockBuildEndEvent.config instanceof Integer pos) {
+				lastConfigs.put(bridge.pos(), pos);
+			} else if (blockBuildEndEvent.config instanceof Point2 point && point.x != 0 && point.y != 0)
+				lastConfigs.put(bridge.pos(), Point2.pack(point.x + bridge.tileX(), point.y + bridge.tileY()));
 		});
 
 		Events.on(ConfigEvent.class, configEvent -> {
 			if (!(configEvent.tile instanceof ItemBridge.ItemBridgeBuild bridge)) return;
+			// Update those passing
+			both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, segment -> {
+				updateEnd(segment);
+				if (!segment.valid()) {
+					getTree(segment.linkDir()).remove(segment);
+					allSegments.remove(segment);
+				}
+			}));
 			// Form for disconnected
 			int lastConfig = lastConfigs.get(bridge.pos(), -1); //
 			if (Vars.world.build(lastConfig) instanceof ItemBridgeBuild oldLink) {
 				oldLink.incoming.removeValue(bridge.pos());
 				formSegment(oldLink);
 			}
-			// Form for new connection
+			// Form for new connection: Remove potential leftover Segment in new link
 			int linkVal = -1;
 			if (configEvent.value instanceof Integer) {
 				linkVal = (int) configEvent.value;
-			} else if (configEvent.value instanceof Point2 point) {
+			} else if (configEvent.value instanceof Point2 point && point.x != 0 && point.y != 0) {
 				linkVal = Point2.pack(point.x + bridge.tileX(), point.y + bridge.tileY());
 			}
 			if (Vars.world.build(linkVal) instanceof ItemBridgeBuild link) {
-				bridge.updateTile();
-				link.incoming.add(bridge.pos());
-				if (!segHead(link)) {
-					Segment linkSeg = findSeg(link.tileX(), link.tileY(), 0);
-					if (linkSeg != null) {
-						allSegments.remove(linkSeg);
-						getTree(linkSeg.linkDir()).remove(linkSeg);
-					}
+//				link.incoming.add(bridge.pos());
+				// TODO: Don't know what this check is for. Refactor this sometime later
+//				if (!segHead(link)) {
+				Segment linkSeg = findSeg(link.tileX(), link.tileY(), 0);
+				if (linkSeg != null) {
+					allSegments.remove(linkSeg);
+					getTree(linkSeg.linkDir()).remove(linkSeg);
 				}
+//				}
 				// Remove to prevent duplicates
-				link.incoming.removeValue(bridge.pos());
-				formSegment((ItemBridgeBuild) configEvent.tile);
+//				link.incoming.removeValue(bridge.pos());
 			}
+			// Form new segment
 			formSegment(bridge);
-			// Update those passing
-			both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, segment -> {
-				ItemBridgeBuild oldEnd = segment.end;
-				updateEnd(segment);
-				if (!segment.valid()) {
-					segment.end = oldEnd; // Needed as QuadTree#remove needs the Segment hitbox
-					tree.remove(segment);
-					allSegments.remove(segment);
-				}
-			}));
 			lastConfigs.put(bridge.pos(), linkVal);
 		});
 
@@ -289,11 +293,13 @@ public class Bridges extends Mod {
 	}
 
 	static void updateEnd(Segment segment) {
-		QuadTree<Segment> tree = getTree(segment.linkDir());
 		// REMOVEME: Some day.
-		if (!tree.remove(segment)) Log.warn("Failed to remove");
+		if (!getTree(segment.linkDir()).remove(segment)) {
+			Log.err("Failed to remove segment: @", segment);
+			return;
+		}
 		segment.updateEnd();
-		tree.insert(segment);
+		getTree(segment.linkDir()).insert(segment);
 	}
 
 	public static void reloadSegments() {
