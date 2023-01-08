@@ -269,13 +269,14 @@ public class Bridges extends Mod {
 			intersected.each(segment -> {
 				// Jank
 				int removeIndex = segment.passing.indexOf(bridge.pos());
+				if (removeIndex == -1) return; // Segment isn't involved, skip it
 				tree.remove(segment);
 				if (removeIndex > 1) {
 					// Segment hitbox changed, update tree
 					segment.end = (ItemBridgeBuild) Vars.world.build(segment.passing.items[removeIndex-1]);
 					segment.passing.setSize(removeIndex);
 					tree.insert(segment);
-				} else if (removeIndex != -1){
+				} else {
 					allSegments.remove(segment);
 				}
 			});
