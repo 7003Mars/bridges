@@ -154,13 +154,18 @@ public class Bridges extends Mod {
 		Events.on(ConfigEvent.class, configEvent -> {
 			if (!(configEvent.tile instanceof ItemBridge.ItemBridgeBuild bridge)) return;
 			// Update those passing
-			both(tree -> tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, segment -> {
-				updateEnd(segment);
-				if (!segment.valid()) {
-					getTree(segment.linkDir()).remove(segment);
-					allSegments.remove(segment);
-				}
-			}));
+			Seq<Segment> intersected = new Seq<>();
+			both(tree -> {
+				intersected.clear();
+				tree.intersect(bridge.tileX(), bridge.tileY(), 1, 1, intersected);
+				intersected.each(segment -> {
+					updateEnd(segment);
+					if (!segment.valid()) {
+						getTree(segment.linkDir()).remove(segment);
+						allSegments.remove(segment);
+					}
+				});
+			});
 			// Form for disconnected
 			int lastConfig = lastConfigs.get(bridge.pos(), -1); //
 			if (Vars.world.build(lastConfig) instanceof ItemBridgeBuild oldLink) {
