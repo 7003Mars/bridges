@@ -180,17 +180,16 @@ public class Bridges extends Mod {
 				linkVal = Point2.pack(point.x + bridge.tileX(), point.y + bridge.tileY());
 			}
 			if (Vars.world.build(linkVal) instanceof ItemBridgeBuild link) {
-//				link.incoming.add(bridge.pos());
-				// TODO: Don't know what this check is for. Refactor this sometime later
-//				if (!segHead(link)) {
-				Segment linkSeg = findSeg(link.tileX(), link.tileY(), 0);
-				if (linkSeg != null) {
-					allSegments.remove(linkSeg);
-					getTree(linkSeg.linkDir()).remove(linkSeg);
+				link.incoming.add(bridge.pos());
+				if (!segHead(link)) {
+					Segment linkSeg = findSeg(link.tileX(), link.tileY(), 0);
+					if (linkSeg != null) {
+						allSegments.remove(linkSeg);
+						getTree(linkSeg.linkDir()).remove(linkSeg);
+					}
 				}
-//				}
 				// Remove to prevent duplicates
-//				link.incoming.removeValue(bridge.pos());
+				link.incoming.removeValue(bridge.pos());
 			}
 			// Form new segment
 			formSegment(bridge);
