@@ -148,7 +148,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		return build.relativeTo(Point2.x(build.link), Point2.y(build.link));
 	}
 
-	public void draw() {
+	public void draw(boolean rainbow) {
 		if (Bridges.debugMode) Vars.ui.showLabel(this.selfIndex+":"+this.max, 0.1f, this.start.x, this.start.y);
 		int linkAxis = this.linkDir() % 2;
 		float x = this.start.x+this.xOffset, y = this.start.y+this.yOffset;
@@ -181,7 +181,11 @@ public class Segment implements QuadTree.QuadTreeObject {
 		}
 		// Actually drawing
 		Draw.z(Layer.overlayUI);
-		Draw.color(this.endSegment.color, Bridges.lineOpacity/100f);
+		if (rainbow) {
+			Draw.color(Color.HSVtoRGB(Time.time % 360, 100, 100), Bridges.lineOpacity/100f);
+		} else {
+			Draw.color(this.endSegment.color, Bridges.lineOpacity/100f);
+		}
 		float drawSize = Math.min(1f, (float)3/4*tilesize/this.max);
 		Lines.stroke(drawSize);
 		// The line

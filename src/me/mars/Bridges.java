@@ -42,7 +42,8 @@ public class Bridges extends Mod {
 	public static QuadTree<Segment> horiSeg;
 	public static Seq<Segment> allSegments = new Seq<>(false);
 
-	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges on the current world
+	private static DragTable table;
+	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges of the current world
 	public static ItemBridge currentSelection = null;
 	private static Seq<Segment> hoverSelected = new Seq<>(false, 8, Segment.class);
 
@@ -72,7 +73,7 @@ public class Bridges extends Mod {
 			fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
 			debugMode = Core.settings.getBool("bridging.debug-mode");
 
-			Table table = new DragTable();
+			table = new DragTable();
 			table.setSize(50f);
 			table.setPosition(0, Core.graphics.getHeight()/2f);
 			TextureRegionDrawable blockRegion = new TextureRegionDrawable(Icon.none);
@@ -91,6 +92,8 @@ public class Bridges extends Mod {
 
 		eventInit();
 
+		Events.on(ResizeEvent.class, resizeEvent -> table.clampPos());
+
 		Events.run(Trigger.drawOver, () -> {
 			if (Vars.state.isGame() && currentSelection != null) {
 				Rect camBounds = Tmp.r1;
@@ -106,12 +109,13 @@ public class Bridges extends Mod {
 					if (segment.block != currentSelection) continue;
 					segment.hitbox(hitbox);
 					if (camBounds.overlaps(hitbox)) {
-						segment.draw();
-						if (segment.passing.contains(Point2.pack(mouseX, mouseY))) hoverSelected.add(segment);
+						boolean hovered = segment.passing.contains(Point2.pack(mouseX, mouseY));
+						if (hovered) hoverSelected.add(segment);
+						segment.draw(!fixedColor && hovered);
 					}
 				}
 				if (hoverSelected.size == 1) {
-					hoverSelected.get(0).drawHighlight();
+					hoverSelected.items[0].drawHighlight();
 				} else if (hoverSelected.size > 1) {
 					int index = (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4));
 					// For Select, index starts at 1

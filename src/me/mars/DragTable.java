@@ -23,9 +23,8 @@ public class DragTable extends Table {
 				if(Core.app.isMobile() && pointer != 0) return;
 				DragTable.this.xDelta += x - this.lastX;
 				DragTable.this.yDelta += y - this.lastY;
-				x = Mathf.clamp(DragTable.this.x - this.lastX + x, 0, Core.graphics.getWidth()-DragTable.this.width);
-				y = Mathf.clamp(DragTable.this.y - this.lastY + y, 0, Core.graphics.getHeight()-DragTable.this.height);
-				DragTable.this.setPosition(x, y);
+				DragTable.this.setPosition(DragTable.this.x - this.lastX + x, DragTable.this.y - this.lastY + y);
+				DragTable.this.clampPos();
 			}
 
 			@Override
@@ -45,5 +44,11 @@ public class DragTable extends Table {
 				if ((Math.abs(xDelta) > DragTable.this.width || Math.abs(yDelta) > DragTable.this.height)) event.stop();
 			}
 		});
+	}
+
+	public void clampPos() {
+		x = Mathf.clamp(DragTable.this.x, 0, Core.graphics.getWidth()-DragTable.this.width);
+		y = Mathf.clamp(DragTable.this.y, 0, Core.graphics.getHeight()-DragTable.this.height);
+		DragTable.this.setPosition(x, y);
 	}
 }
