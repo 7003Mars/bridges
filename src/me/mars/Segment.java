@@ -215,6 +215,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 
 	public void drawHighlight() {
 		Draw.z(Layer.overlayUI+0.1f);
+		Lines.stroke(1f);
 		// Adding 3 pi by dice roll (or to sync it)
 		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 0.8f);
 		Draw.color(Bridges.fixedColor ? Pal.accent : this.endSegment.color, alpha);
