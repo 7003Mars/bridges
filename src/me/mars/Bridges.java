@@ -233,9 +233,12 @@ public class Bridges extends Mod {
 //		queue2.add(() -> lastConfigs.put(bridge.pos(), bridge.link));
 		queue.add(() -> {
 			// Form for incoming
+			Seq<Segment> intersected = new Seq<>();
 			for (int i = 0; i < bridge.incoming.size; i++) {
+				intersected.clear();
 				int pos = bridge.incoming.items[i];
-				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, Bridges::updateEnd));
+				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, intersected));
+				intersected.each(Bridges::updateEnd);
 				formSegment(pos);
 			}
 			// Form for link
