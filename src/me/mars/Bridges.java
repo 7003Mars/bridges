@@ -10,13 +10,11 @@ import arc.math.geom.QuadTree;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
 import arc.scene.style.TextureRegionDrawable;
-import arc.scene.ui.layout.Table;
 import arc.struct.IntIntMap;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
-import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Icon;
 import mindustry.mod.Mod;
@@ -355,10 +353,10 @@ public class Bridges extends Mod {
 		return out.find(segment -> segment.start.tileX() == sx && segment.start.tileY() == sy);
 	}
 
-	public static Segment findSegStrict(int sx, int sy, int axis) {
+	public static Segment findSegStrict(int sx, int sy, int dir) {
 		Seq<Segment> out = new Seq<>();
-		getTree(axis).intersect(sx, sy, 1, 1, out);
-		return out.find(segment -> segment.start.tileX() == sx && segment.start.tileY() == sy);
+		getTree(dir).intersect(sx, sy, 1, 1, out);
+		return out.find(segment -> segment.start.tileX() == sx && segment.start.tileY() == sy && segment.linkDir() == dir);
 	}
 
 	public static void formSegment(int pos) {
