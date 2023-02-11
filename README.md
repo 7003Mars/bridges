@@ -1,4 +1,4 @@
-#Bridging assistant
+# Bridging assistant
 A simple mod that helps with displaying what goes where.
 ![](img/lines.gif)
 ---
