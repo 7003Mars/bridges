@@ -4,12 +4,16 @@ import arc.Core;
 import arc.Events;
 import arc.func.Cons;
 import arc.graphics.g2d.Draw;
+import arc.input.KeyCode;
 import arc.math.Mathf;
 import arc.math.geom.Point2;
-import arc.math.geom.QuadTree;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
+import arc.scene.event.ChangeListener;
+import arc.scene.event.ClickListener;
+import arc.scene.event.InputEvent;
 import arc.scene.style.TextureRegionDrawable;
+import arc.scene.ui.ImageButton;
 import arc.struct.IntIntMap;
 import arc.struct.Seq;
 import arc.util.*;
@@ -24,7 +28,6 @@ import mindustry.world.blocks.distribution.ItemBridge;
 import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
 
 import static mindustry.Vars.*;
-//import arc.util.noise.Noise;
 
 
 public class Bridges extends Mod {
@@ -49,16 +52,23 @@ public class Bridges extends Mod {
 	private static Seq<Runnable> queue = new Seq<>();
 	private static Seq<Runnable> queue2 = new Seq<>();
 	public static IntIntMap lastConfigs = new IntIntMap();
+
+	public Bridges() {
+		Events.on(ContentInitEvent.class, contentInitEvent -> {
+			for (Block block : Vars.content.blocks()) {
+				if (/*Vars.indexer.isBlockPresent(block) && */block instanceof ItemBridge bridge) {
+					bridgeBlocks.add(bridge);
+				}
+			}
+			bridgeBlocks.add((ItemBridge) null);
+		});
+	}
+
 	@Override
 	public void init() {
 		if (Vars.headless) return;
 		Log.info("@ running version [red]@",internalName, mods.getMod(internalName).meta.version);
 		if (!Vars.mobile)ConfigHandler.init();
-		for (Block block : Vars.content.blocks()) {
-			if (/*Vars.indexer.isBlockPresent(block) && */block instanceof ItemBridge bridge) {
-				bridgeBlocks.add(bridge);
-			}
-		}
 
 		Vars.ui.settings.addCategory(Core.bundle.get("setting.bridging.name"), settingsTable -> {
 			// TODO: Bundles
@@ -75,16 +85,24 @@ public class Bridges extends Mod {
 			table.setSize(50f);
 			table.setPosition(0, Core.graphics.getHeight()/2f);
 			TextureRegionDrawable blockRegion = new TextureRegionDrawable(Icon.none);
-			table.button(blockRegion, () -> {
-				int index = bridgeBlocks.indexOf(currentSelection);
-				if (index == bridgeBlocks.size-1) {
-					currentSelection = null;
-					blockRegion.set(Icon.none.getRegion());
-					return;
+			ImageButton selector = new ImageButton(blockRegion) {{
+					this.addListener(new ClickListener(null) {
+						@Override
+						public void clicked(InputEvent event, float x, float y) {
+							// Very cursed
+							ChangeListener.ChangeEvent changeEvent = new ChangeListener.ChangeEvent();
+							fire(changeEvent);
+							if (changeEvent.stopped) return;
+							if (event.keyCode != KeyCode.mouseLeft && event.keyCode != KeyCode.mouseRight) return;
+							int index = bridgeBlocks.indexOf(currentSelection);
+							index = Mathf.mod(index + Mathf.sign(event.keyCode == KeyCode.mouseLeft), bridgeBlocks.size);
+							currentSelection = bridgeBlocks.get(index);
+							blockRegion.set(currentSelection == null ? Icon.none.getRegion() : currentSelection.uiIcon);
+						}
+					});
 				}
-				currentSelection = bridgeBlocks.get(index+1);
-				blockRegion.set(currentSelection.uiIcon);
-			});
+			};
+			table.add(selector);
 			Vars.ui.hudGroup.addChild(table);
 		});
 

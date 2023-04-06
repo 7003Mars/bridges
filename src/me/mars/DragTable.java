@@ -4,10 +4,9 @@ import arc.Core;
 import arc.input.KeyCode;
 import arc.math.Mathf;
 import arc.scene.Element;
-import arc.scene.event.ChangeListener;
-import arc.scene.event.InputEvent;
-import arc.scene.event.InputListener;
+import arc.scene.event.*;
 import arc.scene.ui.layout.Table;
+import arc.util.Log;
 
 public class DragTable extends Table {
 	float xDelta, yDelta;
