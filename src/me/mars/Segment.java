@@ -125,7 +125,9 @@ public class Segment implements QuadTree.QuadTreeObject {
 	public static ItemBridgeBuild getEnd(ItemBridgeBuild start, IntSeq bridges) {
 		ItemBridgeBuild next = start;
 		byte startDir = linkDir(start);
-		while (Vars.world.build(next.link) instanceof ItemBridgeBuild nextLink && next != nextLink && linkDir(next) == startDir) {
+		ItemBridge bridge = (ItemBridge) start.block;
+		while (Vars.world.build(next.link) instanceof ItemBridgeBuild nextLink && bridge.linkValid(next.tile, nextLink.tile) &&
+				next != nextLink && linkDir(next) == startDir) {
 			bridges.add(next.pos());
 			next = nextLink;
 		}

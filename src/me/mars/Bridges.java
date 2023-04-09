@@ -163,6 +163,7 @@ public class Bridges extends Mod {
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
 			if (!(blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge)) return;
 			// TODO: This may or may not fire late/early. It is an issue can't solve for now. Probably a source of bugs
+			// TODO: Figure out what the second part of my comment meant
 			if (blockBuildEndEvent.config == null) {
 				lastConfigs.remove(bridge.pos());
 			} else if (blockBuildEndEvent.config instanceof Integer pos) {
@@ -259,7 +260,7 @@ public class Bridges extends Mod {
 			}
 			// Form for link
 			Segment segment = findSegStrict(Point2.x(bridge.link), Point2.y(bridge.link), Segment.linkDir(bridge));
-			if (segment == null) {
+			if (segment == null || segment.block != bridge.block) {
 				formSegment(bridge);
 			} else {
 				QuadTree<Segment> tree = getTree(segment.linkDir());
