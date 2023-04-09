@@ -1,6 +1,20 @@
 # Bridging assistant
+![GitHub all releases](https://img.shields.io/github/downloads/7003mars/bridges/total?style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/7003mars/bridges/commitTest.yml)
+
 A simple mod that helps with displaying what goes where.
-![](img/lines.gif)
+
+![](img/segments.gif)
+![](img/highlights.gif)
+
+You can drag bridges from to link them
+
+![](img/drag.gif)
+
+You can even drag mass drivers!
+
+![](img/drag2.gif)
+
 ---
 ## Building for Desktop Testing
 
