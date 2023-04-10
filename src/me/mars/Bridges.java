@@ -6,6 +6,7 @@ import arc.func.Cons;
 import arc.graphics.g2d.Draw;
 import arc.input.KeyCode;
 import arc.math.Mathf;
+import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
@@ -15,6 +16,7 @@ import arc.scene.event.InputEvent;
 import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.ImageButton;
 import arc.struct.IntIntMap;
+import arc.struct.IntSeq;
 import arc.struct.Seq;
 import arc.util.*;
 import mindustry.Vars;
@@ -251,9 +253,10 @@ public class Bridges extends Mod {
 		queue.add(() -> {
 			// Form for incoming
 			Seq<Segment> intersected = new Seq<>();
-			for (int i = 0; i < bridge.incoming.size; i++) {
+			IntSeq incoming = allIncoming(bridge);
+			for (int i = 0; i < incoming.size; i++) {
 				intersected.clear();
-				int pos = bridge.incoming.items[i];
+				int pos = incoming.items[i];
 				both(tree -> tree.intersect(Point2.x(pos), Point2.y(pos), 1, 1, intersected));
 				intersected.each(Bridges::updateEnd);
 				formSegment(pos);
@@ -346,6 +349,22 @@ public class Bridges extends Mod {
 		});
 		Log.info("Segments reloaded in @ ms, @/@ segments total",
 				Time.elapsed(), allSegments.count(segment -> segment.start.team == Vars.player.team()), allSegments.size);
+	}
+	private static IntSeq allIncoming(ItemBridgeBuild bridge) {
+		ItemBridge block = (ItemBridge)bridge.block;
+		IntSeq ret = new IntSeq();
+		int x = bridge.tileX(), y = bridge.tileY();
+		int range = block.range;
+		for (int d = 0; d < 4; d++) {
+			for (int i = 1; i-1 < range; i++) {
+				int cx = x + Geometry.d4x(d)*i, cy = y + Geometry.d4y(d)*i;
+				if (block.linkValid(bridge.tile, world.tile(cx, cy), false)) {
+					ItemBridgeBuild inc = (ItemBridgeBuild) world.build(cx, cy);
+					if (inc.link == bridge.pos()) ret.add(Point2.pack(cx, cy));
+				}
+			}
+		}
+		return ret;
 	}
 
 	public static boolean linkValid(ItemBridgeBuild build) {
