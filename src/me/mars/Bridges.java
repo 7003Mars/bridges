@@ -23,6 +23,7 @@ import mindustry.Vars;
 import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
 import mindustry.gen.Icon;
+import mindustry.input.Binding;
 import mindustry.mod.Mod;
 import mindustry.world.Block;
 import mindustry.world.Tile;
@@ -49,6 +50,8 @@ public class Bridges extends Mod {
 	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges of the current world
 	public static ItemBridge currentSelection = null;
 	private static Seq<Segment> hoverSelected = new Seq<>(false, 8, Segment.class);
+
+	private static int scroll = 0;
 
 	private static float time;
 	private static Seq<Runnable> queue = new Seq<>();
@@ -78,6 +81,7 @@ public class Bridges extends Mod {
 			settingsTable.checkPref("bridging.fixed-highlight-color", false);
 			settingsTable.checkPref("bridging.debug-mode", false);
 		});
+
 		Events.on(ClientLoadEvent.class, event -> {
 			lineOpacity = Core.settings.getInt("bridging.line-opacity");
 			fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
@@ -108,7 +112,7 @@ public class Bridges extends Mod {
 			Vars.ui.hudGroup.addChild(table);
 		});
 
-		eventInit();
+		listenerInit();
 
 		Events.on(ResizeEvent.class, resizeEvent -> table.clampPos());
 
@@ -132,10 +136,15 @@ public class Bridges extends Mod {
 						segment.draw(!fixedColor && hovered);
 					}
 				}
+				if (hoverSelected.size < 2) {
+					scroll = 0;
+				}
 				if (hoverSelected.size == 1) {
 					hoverSelected.items[0].drawHighlight();
+
 				} else if (hoverSelected.size > 1) {
-					int index = (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4));
+					int index = scroll == 0 ? (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4)) :
+							Mathf.mod(scroll, hoverSelected.size);
 					// For Select, index starts at 1
 					Select.instance().select(hoverSelected.items, Structs.comparingFloat(segment -> segment.start.pos()),
 							index+1, hoverSelected.size).drawHighlight();
@@ -144,9 +153,41 @@ public class Bridges extends Mod {
 				Draw.reset();
 			}
 		});
+
+		// Wait 2(?) ticks for incoming to be updated
+		Events.run(Trigger.update, () -> {
+			// Poll input stuff
+			if (state.isPlaying() && Core.input.keyDown(Binding.rotateplaced) && Math.abs(Core.input.axisTap(Binding.rotate)) > 0) {
+				scroll+= (int)Core.input.axisTap(Binding.rotate);
+			}
+			// Run Segment logic
+			queue2.each(Runnable::run);
+			queue2.clear();
+			queue2.addAll(queue);
+			queue.clear();
+			time+=Time.delta;
+			if (time >= ticksPerUpdate && state.isPlaying()) {
+				// Settings
+				lineOpacity = Core.settings.getInt("bridging.line-opacity");
+				fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
+				debugMode = Core.settings.getBool("bridging.debug-mode");
+
+				if (debugMode) Time.mark();
+				update();
+				if (debugMode) {
+					int seqInvalid = allSegments.count(segment -> !segment.valid());
+					Seq<Segment> treeSegs = new Seq<>();
+					both(tree -> tree.getObjects(treeSegs));
+					int treeInvalid = treeSegs.count(segment -> !segment.valid());
+					Vars.ui.showInfoToast("Took " + Time.elapsed() + " ms to update\nInvalid: "
+							+ seqInvalid + ":" + treeInvalid, ticksPerUpdate/60f);
+				}
+				time-=ticksPerUpdate;
+			}
+		});
 	}
 
-	public static void eventInit() {
+	public static void listenerInit() {
 		Events.on(WorldLoadEvent.class, worldLoadEvent -> {
 			bounds.set(0, 0, world.width(), world.height());
 			Log.info("Bounds: @", bounds);
@@ -217,33 +258,6 @@ public class Bridges extends Mod {
 			// Form new segment
 			formSegment(bridge);
 			lastConfigs.put(bridge.pos(), linkVal);
-		});
-
-		// Wait 2(?) ticks for incoming to be updated
-		Events.run(Trigger.update, () -> {
-			queue2.each(Runnable::run);
-			queue2.clear();
-			queue2.addAll(queue);
-			queue.clear();
-			time+=Time.delta;
-			if (time >= ticksPerUpdate && state.isPlaying()) {
-				// Settings
-				lineOpacity = Core.settings.getInt("bridging.line-opacity");
-				fixedColor = Core.settings.getBool("bridging.fixed-highlight-color");
-				debugMode = Core.settings.getBool("bridging.debug-mode");
-
-				if (debugMode) Time.mark();
-				update();
-				if (debugMode) {
-					int seqInvalid = allSegments.count(segment -> !segment.valid());
-					Seq<Segment> treeSegs = new Seq<>();
-					both(tree -> tree.getObjects(treeSegs));
-					int treeInvalid = treeSegs.count(segment -> !segment.valid());
-					Vars.ui.showInfoToast("Took " + Time.elapsed() + " ms to update\nInvalid: "
-							+ seqInvalid + ":" + treeInvalid, ticksPerUpdate/60f);
-				}
-				time-=ticksPerUpdate;
-			}
 		});
 	}
 
