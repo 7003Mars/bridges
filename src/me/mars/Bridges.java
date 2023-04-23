@@ -54,8 +54,8 @@ public class Bridges extends Mod {
 	private static int scroll = 0;
 
 	private static float time;
-	private static Seq<Runnable> queue = new Seq<>();
-	private static Seq<Runnable> queue2 = new Seq<>();
+	static Seq<Runnable> queue = new Seq<>();
+	static Seq<Runnable> queue2 = new Seq<>();
 	public static IntIntMap lastConfigs = new IntIntMap();
 
 	public Bridges() {

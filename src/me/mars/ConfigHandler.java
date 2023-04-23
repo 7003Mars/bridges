@@ -7,8 +7,11 @@ import arc.graphics.g2d.Lines;
 import arc.input.KeyCode;
 import arc.math.geom.Vec2;
 import arc.struct.ObjectSet;
+import arc.util.Log;
 import arc.util.Reflect;
+import arc.util.Timer;
 import mindustry.Vars;
+import mindustry.game.EventType;
 import mindustry.game.EventType.Trigger;
 import mindustry.gen.Building;
 import mindustry.graphics.Layer;
@@ -21,6 +24,8 @@ import mindustry.world.blocks.distribution.MassDriver.MassDriverBuild;
 import mindustry.world.blocks.liquid.LiquidBridge.LiquidBridgeBuild;
 import mindustry.world.blocks.payloads.PayloadMassDriver.PayloadDriverBuild;
 
+import static mindustry.Vars.control;
+
 public class ConfigHandler {
 //	static ObjectMap<Class<? extends Building>, Func2<Building, Building, Boolean>> checkers = new ObjectMap<>();
 	static ObjectSet<Class<? extends Building>> validBuilds = ObjectSet.with(
@@ -32,8 +37,16 @@ public class ConfigHandler {
 	public static void init() {
 		// Jank time
 		configFragment = new ModifiedConfigFragment();
+		Events.on(EventType.ClientLoadEvent.class, clientLoadEvent -> {
+			Bridges.queue.add(() -> Reflect.set(InputHandler.class, control.input, "config", configFragment));
+			Timer.schedule(() -> {
+				if (control.input.config != configFragment) {
+					Log.warn("ConfigFragment was not set. Some mod replacing something perhaps?");
+					Log.info("Current InputHandler: @\n ConfigFragment: @", control.input, control.input.config);
+				}
+			}, 10f);
+		});
 
-		Reflect.set(InputHandler.class, Vars.control.input, "config", configFragment);
 
 		Events.run(Trigger.uiDrawBegin, () -> {
 			if (configClicked != null) {
