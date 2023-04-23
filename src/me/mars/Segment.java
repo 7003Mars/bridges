@@ -218,7 +218,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		Draw.z(Layer.overlayUI+0.1f);
 		Lines.stroke(1f);
 		// Adding 3 pi by dice roll (or to sync it)
-		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 0.8f);
+		float alpha = Mathf.absin(Time.time/7.5f + 3*Mathf.PI, 1f, 1.5f);
 		Draw.color(Bridges.fixedColor ? Pal.accent : this.endSegment.color, alpha);
 		for (int i = 0; i < this.passing.size; i++) {
 			int pos = this.passing.items[i];
