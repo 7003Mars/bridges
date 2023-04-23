@@ -37,13 +37,13 @@ public class ConfigHandler {
 	public static void init() {
 		// Jank time
 		configFragment = new ModifiedConfigFragment();
+		Reflect.set(InputHandler.class, control.input, "config", configFragment);
 		Events.on(EventType.ClientLoadEvent.class, clientLoadEvent -> {
-			Bridges.queue.add(() -> Reflect.set(InputHandler.class, control.input, "config", configFragment));
 			Timer.schedule(() -> {
 				if (control.input.config != configFragment) {
 					Log.warn("ConfigFragment was not set. Some mod replacing something perhaps?");
-					Log.info("Current InputHandler: @\n ConfigFragment: @", control.input, control.input.config);
 				}
+				Log.info("Current InputHandler: @\n ConfigFragment: @", control.input, control.input.config);
 			}, 10f);
 		});
 
