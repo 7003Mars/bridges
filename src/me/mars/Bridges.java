@@ -67,6 +67,8 @@ public class Bridges extends Mod {
 			}
 			bridgeBlocks.add((ItemBridge) null);
 		});
+
+		BlockHandler.init();
 	}
 
 	@Override
