@@ -2,7 +2,9 @@ package me.mars.blocks;
 
 import arc.math.geom.Point2;
 import arc.struct.Seq;
+import arc.util.Reflect;
 import mindustry.Vars;
+import mindustry.ctype.MappableContent;
 import mindustry.entities.units.BuildPlan;
 import mindustry.type.Category;
 import mindustry.world.blocks.power.PowerNode;
@@ -16,11 +18,24 @@ public class WeavedNode extends PowerNode {
 		requirements(Category.power, parent.requirements.clone());
 		this.maxNodes = parent.maxNodes;
 		this.init();
-//		String name = this.name;
-//		Reflect.set(MappableContent.class, this, "name", parent.name);
-//		Log.info("My name when loading is @", this.name);
-//		this.load();
-//		Reflect.set(MappableContent.class, this, "name", name);
+	}
+
+	@Override
+	public void load() {
+		String name = this.name;
+		Reflect.set(MappableContent.class, this, "name", parent.name);
+		super.load();
+		Reflect.set(MappableContent.class, this, "name", name);
+		this.region = parent.region;
+	}
+
+	@Override
+	public void loadIcon() {
+		String name = this.name;
+		Reflect.set(MappableContent.class, this, "name", parent.name);
+		super.loadIcon();
+		Reflect.set(MappableContent.class, this, "name", name);
+		this.region = parent.region;
 	}
 
 	@Override
