@@ -6,7 +6,6 @@ import arc.util.Reflect;
 import mindustry.Vars;
 import mindustry.ctype.MappableContent;
 import mindustry.entities.units.BuildPlan;
-import mindustry.type.Category;
 import mindustry.world.blocks.power.PowerNode;
 
 public class WeavedNode extends PowerNode {
@@ -15,7 +14,7 @@ public class WeavedNode extends PowerNode {
 	public WeavedNode(PowerNode parent) {
 		super("weaved-"+parent.name);
 		this.parent = parent;
-		requirements(Category.power, parent.requirements.clone());
+		BlockHandler.cloneStats(this, parent);
 		this.maxNodes = parent.maxNodes;
 		this.init();
 	}

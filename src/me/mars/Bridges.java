@@ -19,6 +19,7 @@ import arc.struct.IntIntMap;
 import arc.struct.IntSeq;
 import arc.struct.Seq;
 import arc.util.*;
+import me.mars.blocks.BlockHandler;
 import mindustry.Vars;
 import mindustry.game.EventType.*;
 import mindustry.gen.Groups;
