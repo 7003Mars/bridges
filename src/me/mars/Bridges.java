@@ -141,7 +141,6 @@ public class Bridges extends Mod {
 				}
 				if (hoverSelected.size == 1) {
 					hoverSelected.items[0].drawHighlight();
-
 				} else if (hoverSelected.size > 1) {
 					int index = scroll == 0 ? (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4)) :
 							Mathf.mod(scroll, hoverSelected.size);
@@ -211,8 +210,9 @@ public class Bridges extends Mod {
 				lastConfigs.remove(bridge.pos());
 			} else if (blockBuildEndEvent.config instanceof Integer pos) {
 				lastConfigs.put(bridge.pos(), pos);
-			} else if (blockBuildEndEvent.config instanceof Point2 point && point.x != 0 && point.y != 0)
+			} else if (blockBuildEndEvent.config instanceof Point2 point && (point.x != 0 || point.y != 0)) {
 				lastConfigs.put(bridge.pos(), Point2.pack(point.x + bridge.tileX(), point.y + bridge.tileY()));
+			}
 		});
 
 		Events.on(ConfigEvent.class, configEvent -> {
