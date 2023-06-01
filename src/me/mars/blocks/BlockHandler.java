@@ -6,6 +6,7 @@ import mindustry.game.EventType.ContentInitEvent;
 import mindustry.world.Block;
 import mindustry.world.blocks.distribution.BufferedItemBridge;
 import mindustry.world.blocks.power.PowerNode;
+import mindustry.world.meta.BuildVisibility;
 
 public class BlockHandler {
 	public static void init() {
@@ -17,10 +18,11 @@ public class BlockHandler {
 	}
 
 	public static void cloneStats(Block block, Block target) {
+		block.stats = target.stats;
 		block.health = target.health;
 		block.size = target.size;
 		block.buildCost = target.buildCost;
 		block.requirements(target.category, target.requirements.clone());
-
+		block.buildVisibility = target.unlocked() ? target.buildVisibility : BuildVisibility.hidden;
 	}
 }

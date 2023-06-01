@@ -1,6 +1,7 @@
 package me.mars.blocks;
 
 import arc.math.geom.Point2;
+import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
 import arc.util.Reflect;
 import mindustry.Vars;
@@ -15,8 +16,15 @@ public class WeavedNode extends PowerNode {
 		super("weaved-"+parent.name);
 		this.parent = parent;
 		BlockHandler.cloneStats(this, parent);
+		this.laserRange = parent.laserRange;
 		this.maxNodes = parent.maxNodes;
 		this.init();
+	}
+
+	@Override
+	public void displayExtra(Table table) {
+		table.clear();
+		Vars.ui.content.show(this.parent);
 	}
 
 	@Override

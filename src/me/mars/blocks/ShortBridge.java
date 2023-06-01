@@ -1,6 +1,8 @@
 package me.mars.blocks;
 
+import arc.scene.ui.layout.Table;
 import arc.util.Reflect;
+import mindustry.Vars;
 import mindustry.ctype.MappableContent;
 import mindustry.entities.units.BuildPlan;
 import mindustry.world.blocks.distribution.BufferedItemBridge;
@@ -15,6 +17,12 @@ public class ShortBridge extends BufferedItemBridge {
 		this.itemCapacity = parent.itemCapacity;
 		this.bufferCapacity = parent.bufferCapacity;
 		this.init();
+	}
+
+	@Override
+	public void displayExtra(Table table) {
+		table.clear();
+		Vars.ui.content.show(this.parent);
 	}
 
 	@Override
