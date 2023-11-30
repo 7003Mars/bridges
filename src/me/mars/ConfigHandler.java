@@ -27,7 +27,6 @@ import mindustry.world.blocks.payloads.PayloadMassDriver.PayloadDriverBuild;
 import static mindustry.Vars.control;
 
 public class ConfigHandler {
-//	static ObjectMap<Class<? extends Building>, Func2<Building, Building, Boolean>> checkers = new ObjectMap<>();
 	static ObjectSet<Class<? extends Building>> validBuilds = ObjectSet.with(
 			BufferedItemBridgeBuild.class, ItemBridgeBuild.class, LiquidBridgeBuild.class, MassDriverBuild.class, PayloadDriverBuild.class);
 
@@ -75,7 +74,6 @@ public class ConfigHandler {
 		if (validBuilds.contains(build.getClass())) configClicked = build;
 	}
 }
-
 class ModifiedConfigFragment extends BlockConfigFragment {
 	@Override
 	public void showConfig(Building tile) {

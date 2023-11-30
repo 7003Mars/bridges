@@ -1,5 +1,6 @@
 package me.mars.blocks;
 
+import arc.Core;
 import arc.Events;
 import arc.struct.ObjectMap;
 import arc.struct.OrderedMap;
@@ -36,11 +37,12 @@ public class BlockHandler {
 	public static void init() {
 		Seq<SchematicBlock> schematicBlocks = new Seq<>();
 		Events.on(ContentInitEvent.class, contentInitEvent -> {
-			new WeavedNode((PowerNode) Blocks.powerNode);
-			new ShortBridge((BufferedItemBridge) Blocks.itemBridge, 2);
-			new ShortBridge((BufferedItemBridge) Blocks.itemBridge, 3);
-
-			new SchematicGuideBlock();
+			if (Core.settings.getBool("bridging.custom-blocks", false)) {
+				new WeavedNode((PowerNode) Blocks.powerNode);
+				new ShortBridge((BufferedItemBridge) Blocks.itemBridge, 2);
+				new ShortBridge((BufferedItemBridge) Blocks.itemBridge, 3);
+				new SchematicGuideBlock();
+			}
 			Seq<String> glyphs = glyphMapping.orderedKeys();
 			for (Schematic schematic : Vars.schematics.all()) {
 				Seq<String> filteredTags = schematic.labels.select(glyphs::contains);
@@ -71,7 +73,7 @@ public class BlockHandler {
 			Events.run(EventType.Trigger.update, () -> {
 				InputHandler input = Vars.control.input;
 				if (input.block instanceof ButtonBlock button) {
-					selectedBlocks.get(button.category, (Block) null);
+					selectedBlocks.put(button.category, null);
 					input.block = null;
 					button.clicked();
 				}

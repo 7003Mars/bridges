@@ -82,6 +82,7 @@ public class Bridges extends Mod {
 			// TODO: Bundles
 			settingsTable.sliderPref("bridging.line-opacity", 70, 10, 100, i -> i+"%");
 			settingsTable.checkPref("bridging.fixed-highlight-color", false);
+			settingsTable.checkPref("bridging.custom-blocks", false);
 			settingsTable.checkPref("bridging.debug-mode", false);
 		});
 
