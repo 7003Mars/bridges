@@ -7,7 +7,7 @@ A simple mod that helps with displaying what goes where.
 ![](img/segments.gif)
 ![](img/highlights.gif)
 
-You can drag bridges from to link them
+You can drag bridges to link them
 
 ![](img/drag.gif)
 
