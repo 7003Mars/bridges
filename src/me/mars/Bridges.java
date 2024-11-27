@@ -6,7 +6,6 @@ import arc.func.Cons;
 import arc.graphics.g2d.Draw;
 import arc.input.KeyCode;
 import arc.math.Mathf;
-import arc.math.geom.Geometry;
 import arc.math.geom.Point2;
 import arc.math.geom.Rect;
 import arc.math.geom.Vec2;
@@ -21,16 +20,19 @@ import arc.struct.Seq;
 import arc.util.*;
 import me.mars.blocks.BlockHandler;
 import mindustry.Vars;
+import mindustry.content.Blocks;
 import mindustry.game.EventType.*;
+import mindustry.gen.Building;
 import mindustry.gen.Groups;
 import mindustry.gen.Icon;
 import mindustry.input.Binding;
 import mindustry.mod.Mod;
 import mindustry.world.Block;
-import mindustry.world.Tile;
+import mindustry.world.blocks.distribution.DirectionBridge.DirectionBridgeBuild;
 import mindustry.world.blocks.distribution.ItemBridge;
 import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
 
+import static me.mars.BridgeLike.*;
 import static mindustry.Vars.*;
 
 
@@ -48,8 +50,8 @@ public class Bridges extends Mod {
 	public static Seq<Segment> allSegments = new Seq<>(false);
 
 	private static DragTable table;
-	public static Seq<ItemBridge> bridgeBlocks = new Seq<>(); // All bridges of the current world
-	public static ItemBridge currentSelection = null;
+	public static Seq<Block> bridgeBlocks = new Seq<>(); // All bridges of the current world
+	public static Block currentSelection = null;
 	private static Seq<Segment> hoverSelected = new Seq<>(false, 8, Segment.class);
 
 	private static int scroll = 0;
@@ -66,6 +68,7 @@ public class Bridges extends Mod {
 					bridgeBlocks.add(bridge);
 				}
 			}
+			bridgeBlocks.add(Blocks.ductBridge);
 			bridgeBlocks.add((ItemBridge) null);
 		});
 
@@ -121,40 +124,39 @@ public class Bridges extends Mod {
 		Events.on(ResizeEvent.class, resizeEvent -> table.clampPos());
 
 		Events.run(Trigger.drawOver, () -> {
-			if (Vars.state.isGame() && currentSelection != null) {
-				Rect camBounds = Tmp.r1;
-				camBounds.setSize(Core.camera.width/tilesize, Core.camera.height/tilesize);
-				camBounds.setCenter(Core.camera.position.x/tilesize, Core.camera.position.y/tilesize);
-				Rect hitbox = Tmp.r2;
+			if (!Vars.state.isGame() || currentSelection == null) return;
+			Rect camBounds = Tmp.r1;
+			camBounds.setSize(Core.camera.width/tilesize, Core.camera.height/tilesize);
+			camBounds.setCenter(Core.camera.position.x/tilesize, Core.camera.position.y/tilesize);
+			Rect hitbox = Tmp.r2;
 
-				Vec2 mouseCoords = Core.input.mouseWorld();
-				int mouseX = Math.round(mouseCoords.x/tilesize), mouseY = Math.round(mouseCoords.y/tilesize);
-				hoverSelected.clear();
-				float prevZ = Draw.z();
-				for (Segment segment : allSegments) {
-					if (segment.block != currentSelection) continue;
-					segment.hitbox(hitbox);
-					if (camBounds.overlaps(hitbox)) {
-						boolean hovered = segment.passing.contains(Point2.pack(mouseX, mouseY));
-						if (hovered) hoverSelected.add(segment);
-						segment.draw(!fixedColor && hovered);
-					}
+			Vec2 mouseCoords = Core.input.mouseWorld();
+			int mouseX = Math.round(mouseCoords.x/tilesize), mouseY = Math.round(mouseCoords.y/tilesize);
+			hoverSelected.clear();
+			float prevZ = Draw.z();
+			for (Segment segment : allSegments) {
+				if (segment.bridgeType != currentSelection) continue;
+				segment.hitbox(hitbox);
+				if (camBounds.overlaps(hitbox)) {
+					boolean hovered = segment.passing.contains(Point2.pack(mouseX, mouseY));
+					if (hovered) hoverSelected.add(segment);
+					segment.draw(!fixedColor && hovered);
 				}
-				if (hoverSelected.size < 2) {
-					scroll = 0;
-				}
-				if (hoverSelected.size == 1) {
-					hoverSelected.items[0].drawHighlight();
-				} else if (hoverSelected.size > 1) {
-					int index = scroll == 0 ? (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4)) :
-							Mathf.mod(scroll, hoverSelected.size);
-					// For Select, index starts at 1
-					Select.instance().select(hoverSelected.items, Structs.comparingFloat(segment -> segment.start.pos()),
-							index+1, hoverSelected.size).drawHighlight();
-				}
-				Draw.z(prevZ);
-				Draw.reset();
 			}
+			if (hoverSelected.size < 2) {
+				scroll = 0;
+			}
+			if (hoverSelected.size == 1) {
+				hoverSelected.items[0].drawHighlight();
+			} else if (hoverSelected.size > 1) {
+				int index = scroll == 0 ? (int)(Time.time/7.5f % (hoverSelected.size*Mathf.PI*4) /(Mathf.PI*4)) :
+						Mathf.mod(scroll, hoverSelected.size);
+				// For Select, index starts at 1
+				Select.instance().select(hoverSelected.items, Structs.comparingFloat(segment -> segment.start.pos()),
+						index+1, hoverSelected.size).drawHighlight();
+			}
+			Draw.z(prevZ);
+			Draw.reset();
 		});
 
 		// Wait 2(?) ticks for incoming to be updated
@@ -194,16 +196,24 @@ public class Bridges extends Mod {
 		Events.on(WorldLoadEvent.class, worldLoadEvent -> {
 			bounds.set(0, 0, world.width(), world.height());
 			Log.info("Bounds: @", bounds);
-			reloadSegments();
+			horiSeg = new QuadTree<>(bounds);
+			vertSeg = new QuadTree<>(bounds);
+			queue.add(Bridges::reloadSegments);
 		});
 
 		// These work on the assumption that bridges are 1x1
 		Events.on(TilePreChangeEvent.class, tilePreChangeEvent -> {
-			if (tilePreChangeEvent.tile.build instanceof ItemBridgeBuild bridge) bridgeRemoved(bridge);
+			Building building = tilePreChangeEvent.tile.build;
+			if (building instanceof ItemBridgeBuild || building instanceof DirectionBridgeBuild) {
+				bridgeRemoved(building);
+			}
 		});
 
 		Events.on(TileChangeEvent.class, tileChangeEvent -> {
-			if (tileChangeEvent.tile.build instanceof ItemBridgeBuild bridge) bridgeBuilt(bridge);
+			Building building = tileChangeEvent.tile.build;
+			if (building instanceof ItemBridgeBuild || building instanceof DirectionBridgeBuild) {
+				bridgeBuilt(building);
+			}
 		});
 
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
@@ -263,9 +273,58 @@ public class Bridges extends Mod {
 			formSegment(bridge);
 			lastConfigs.put(bridge.pos(), linkVal);
 		});
+
+		Events.on(BuildRotateEvent.class, buildRotateEvent -> {
+			if (!(buildRotateEvent.build instanceof DirectionBridgeBuild dirBridge)) return;
+			int rotation = dirBridge.rotation;
+			dirBridge.rotation = buildRotateEvent.previous;
+			DirectionBridgeBuild oldLink = dirBridge.findLink();
+			dirBridge.rotation = rotation;
+			// Try forming a segment for the disconnected bridge
+			if (oldLink != null) {
+				oldLink.occupied[buildRotateEvent.previous%4] = null;
+				formSegment(oldLink);
+			}
+			// Update any segments that pass through this bridge
+			Seq<Segment> intersected = new Seq<>();
+			both(tree -> {
+				intersected.clear();
+				tree.intersect(dirBridge.tileX(), dirBridge.tileY(), 1f, 1f, intersected);
+				for (Segment segment : intersected) {
+					if (segment.passing.contains(dirBridge.pos())) updateEnd(segment);
+				}
+			});
+			if (segHead(dirBridge)) {
+				// Try forming a segment if the bridge is a seghead
+				formSegment(dirBridge);
+			} else {
+				// Remove leftover segment if this bridge is no longer a seghead
+				Segment oldSeg = findSeg(dirBridge.tileX(), dirBridge.tileY(), (buildRotateEvent.previous)%2);
+				if (oldSeg != null) {
+					getTree(oldSeg.linkDir()).remove(oldSeg);
+					allSegments.remove(oldSeg);
+				}
+			}
+			// Remove leftover segment in new link if it is no longer a seghead
+			DirectionBridgeBuild link = dirBridge.findLink();
+			if (link != null) {
+				link.occupied[dirBridge.rotation%4] = dirBridge;
+				if (segHead(link)) {
+					formSegment(link);
+				} else {
+					Segment linkSeg = findSeg(link.tileX(), link.tileY(), (buildRotateEvent.previous)%2);
+					if (linkSeg != null) {
+						getTree(linkSeg.linkDir()).remove(linkSeg);
+						allSegments.remove(linkSeg);
+					}
+				}
+
+			}
+		});
 	}
 
-	static void bridgeBuilt(ItemBridgeBuild bridge) {
+
+	static void bridgeBuilt(Building bridge) {
 		// TODO: Unknown if this is properly updated.
 //		queue2.add(() -> lastConfigs.put(bridge.pos(), bridge.link));
 		queue.add(() -> {
@@ -279,9 +338,27 @@ public class Bridges extends Mod {
 				intersected.each(Bridges::updateEnd);
 				formSegment(pos);
 			}
+			int linkPos = getLink(bridge);
+			// Form for dirBridge which might have lost its connection
+			if (bridge instanceof DirectionBridgeBuild dirBridge) {
+				// Revert to before this bridge existed
+				dirBridge.tile.build = null;
+				for (int i = 0; i < incoming.size; i++) {
+					DirectionBridgeBuild incomingBridge = (DirectionBridgeBuild) world.build(incoming.items[i]);
+					// Find the previous link of bridges that link to this current bridge
+					DirectionBridgeBuild oldLink = incomingBridge.findLink();
+					if (oldLink == null) continue;
+					// If the current bridge links to the previous link, that bridge
+					if (linkPos != oldLink.pos()) {
+						oldLink.occupied[incomingBridge.rotation%4] = null;
+						formSegment(oldLink);
+					}
+				}
+				dirBridge.tile.build = dirBridge;
+			}
 			// Form for link
-			Segment segment = findSegStrict(Point2.x(bridge.link), Point2.y(bridge.link), Segment.linkDir(bridge));
-			if (segment == null || segment.block != bridge.block) {
+			Segment segment = findSegStrict(Point2.x(linkPos), Point2.y(linkPos), linkDir(bridge));
+			if (segment == null || segment.bridgeType != bridge.block) {
 				formSegment(bridge);
 			} else {
 				QuadTree<Segment> tree = getTree(segment.linkDir());
@@ -294,21 +371,64 @@ public class Bridges extends Mod {
 				segment.updateEnd();
 				tree.insert(segment);
 			}
+
 		});
 	}
 
-	static void bridgeRemoved(ItemBridgeBuild bridge) {
+	static void bridgeRemoved(Building bridge) {
 		lastConfigs.remove(bridge.pos());
 		// Remove itself
-		Segment self = findSeg(bridge.tileX(), bridge.tileY(), Segment.linkDir(bridge));
+		// TODO IMPORTANT doesn't linkDir not return the axis?
+		Segment self = findSeg(bridge.tileX(), bridge.tileY(), linkDir(bridge));
 		if (self != null) {
 			getTree(self.linkDir()).remove(self);
 			allSegments.remove(self);
 		}
+		if (bridge instanceof DirectionBridgeBuild dirBridge) {
+			IntSeq incoming = allIncoming(dirBridge);
+			// Hack to pretend the building is already gone
+			bridge.tile.build = null; // Hack to pretend the building is already gone
+			for (int i = 0; i < incoming.size; i++) {
+				DirectionBridgeBuild incomingBridge = (DirectionBridgeBuild) world.build(incoming.items[i]);
+				DirectionBridgeBuild link = incomingBridge.findLink();
+				if (link == null) continue;
+				link.occupied[incomingBridge.rotation%4] = incomingBridge;
+				if (!segHead(link)) {
+					// TODO this can be optimised to strict
+					Segment segment = findSeg(link.tileX(), link.tileY(), link.rotation%2);
+					if (segment == null) continue;
+					getTree(segment.linkDir()).remove(segment);
+					allSegments.remove(segment);
+				}
+			}
+			bridge.tile.build = bridge;
+		}
 		// Make new Segment for link if possible
-		if (Vars.world.build(bridge.link) instanceof ItemBridgeBuild link) {
-			link.incoming.removeValue(bridge.pos());
-			formSegment(link);
+		Building link = world.build(getLink(bridge));
+		if (link instanceof ItemBridgeBuild itemLink) {
+			itemLink.incoming.removeValue(bridge.pos());
+			formSegment(itemLink);
+		} else if (link instanceof DirectionBridgeBuild dirLink) {
+			bridge.tile.build = null; // Hack to pretend the building is already gone
+			IntSeq linkIncoming = allIncoming(dirLink);
+			bridge.tile.build = bridge;
+			// linkIncoming should already not include the current bridge
+			// Perform a manual seghead check
+			int linkDir = dirLink.relativeTo(bridge);
+			boolean segHead = true;
+			for (int i = 0; i < linkIncoming.size; i++) {
+				int pos = linkIncoming.items[i];
+				// TODO this if statement was written at 12am check for bs
+				if (dirLink.relativeTo(Point2.x(pos), Point2.y(pos)) == linkDir) {
+					segHead = false;
+					break;
+				}
+			}
+			if (segHead) {
+				// TODO linkDir() should never return -1 as the dirLink should always link to the dirLink which must exist?
+				dirLink.occupied[linkDir(link)%4] = null;
+				formSegment(dirLink);
+			}
 		}
 		// Update those linked to the bridge.
 		Seq<Segment> intersected = new Seq<>();
@@ -318,13 +438,16 @@ public class Bridges extends Mod {
 			intersected.each(segment -> {
 				// Jank
 				int removeIndex = segment.passing.indexOf(bridge.pos());
-				if (removeIndex == -1) return; // Segment isn't involved, skip it
+				if (removeIndex == -1) {
+					return; // Segment isn't involved, skip it
+				}
 				tree.remove(segment);
-				if (removeIndex > 1) {
-					// Segment hitbox changed, update tree
-					segment.end = (ItemBridgeBuild) Vars.world.build(segment.passing.items[removeIndex-1]);
-					segment.passing.setSize(removeIndex);
-					tree.insert(segment);
+				// We now need to update the segment ends because DirectionBridges can automatically relink
+				bridge.tile.build = null; // Hack to remove the building ahead of time
+				segment.updateEnd();
+				bridge.tile.build = bridge;
+				if (segment.passing.size >= 2) {
+					tree.insert(segment); // Segment is long enough, we keep it
 				} else {
 					allSegments.remove(segment);
 				}
@@ -343,7 +466,6 @@ public class Bridges extends Mod {
 	}
 
 	static void updateEnd(Segment segment) {
-		// REMOVEME: Some day.
 		if (!getTree(segment.linkDir()).remove(segment)) {
 			Log.err("Failed to remove segment: @", segment);
 			return;
@@ -360,43 +482,15 @@ public class Bridges extends Mod {
 		vertSeg = new QuadTree<>(bounds);
 		allSegments.clear();
 		Groups.build.each(building -> {
-			if (!(building instanceof ItemBridgeBuild b)) return;
-			if (b.link != -1) lastConfigs.put(b.pos(), b.link);
-			formSegment(b);
-
+			if ((building instanceof ItemBridgeBuild b)) {
+				if (b.link != -1) lastConfigs.put(b.pos(), b.link);
+				formSegment(b);
+			} else if (building instanceof DirectionBridgeBuild) {
+				formSegment(building);
+			}
 		});
 		Log.info("Segments reloaded in @ ms, @/@ segments total",
 				Time.elapsed(), allSegments.count(segment -> segment.start.team == Vars.player.team()), allSegments.size);
-	}
-	private static IntSeq allIncoming(ItemBridgeBuild bridge) {
-		ItemBridge block = (ItemBridge)bridge.block;
-		IntSeq ret = new IntSeq();
-		int x = bridge.tileX(), y = bridge.tileY();
-		int range = block.range;
-		for (int d = 0; d < 4; d++) {
-			for (int i = 1; i-1 < range; i++) {
-				int cx = x + Geometry.d4x(d)*i, cy = y + Geometry.d4y(d)*i;
-				if (block.linkValid(bridge.tile, world.tile(cx, cy), false)) {
-					ItemBridgeBuild inc = (ItemBridgeBuild) world.build(cx, cy);
-					if (inc.link == bridge.pos()) ret.add(Point2.pack(cx, cy));
-				}
-			}
-		}
-		return ret;
-	}
-
-	public static boolean linkValid(ItemBridgeBuild build) {
-		return ((ItemBridge)build.block).linkValid(build.tile, Vars.world.tile(build.link));
-	}
-
-	public static boolean segHead(ItemBridgeBuild build) {
-		if (build.incoming.isEmpty()) return true;
-		for (int i = 0; i < build.incoming.size; i++) {
-			int pos = build.incoming.items[i];
-			int incomingDir = Tile.relativeTo(Point2.x(pos), Point2.y(pos), (float) build.tileX(), (float) build.tileY());
-			if (incomingDir == Segment.linkDir(build)) return false;
-		}
-		return true;
 	}
 
 	public static Segment findSeg(int sx, int sy, int firstAxis) {
@@ -416,13 +510,12 @@ public class Bridges extends Mod {
 	}
 
 	public static void formSegment(int pos) {
-		if (!(Vars.world.build(pos) instanceof ItemBridgeBuild bridge)) return;
-		formSegment(bridge);
+		formSegment(world.build(pos));
 	}
 
-	public static void formSegment(ItemBridgeBuild bridge) {
+	public static void formSegment(Building bridge) {
 		if (segHead(bridge) && linkValid(bridge)) {
-			Segment found = findSeg(bridge.tileX(), bridge.tileY(), Segment.linkDir(bridge));
+			Segment found = findSeg(bridge.tileX(), bridge.tileY(), linkDir(bridge));
 			if (found != null) {
 				updateEnd(found);
 			} else {

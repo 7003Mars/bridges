@@ -17,11 +17,14 @@ import arc.util.Time;
 import arc.util.Tmp;
 import arc.util.noise.VoronoiNoise;
 import mindustry.Vars;
+import mindustry.content.Blocks;
+import mindustry.gen.Building;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
-import mindustry.world.blocks.distribution.ItemBridge;
-import mindustry.world.blocks.distribution.ItemBridge.ItemBridgeBuild;
+import mindustry.world.Block;
+import mindustry.world.blocks.distribution.DirectionBridge;
 
+import static me.mars.BridgeLike.*;
 import static mindustry.Vars.tilesize;
 
 public class Segment implements QuadTree.QuadTreeObject {
@@ -29,10 +32,10 @@ public class Segment implements QuadTree.QuadTreeObject {
 	private static Seq<Segment> tmpSeq = new Seq<>();
 	private static ObjectSet<Segment> tmpSet = new ObjectSet<>();
 
-	public ItemBridge block;
+	public Block bridgeType;
 
-	public ItemBridgeBuild start;
-	public ItemBridgeBuild end;
+	public Building start;
+	public Building end;
 
 	public @Nullable
 	Segment next = null;
@@ -47,11 +50,13 @@ public class Segment implements QuadTree.QuadTreeObject {
 	// Ensure this seq is ordered
 	public IntSeq passing = new IntSeq(4);
 
-	public Segment(ItemBridgeBuild start) {
-		
+	public Segment(Building start) {
 		this.start = start;
 		this.updateEnd();
-		this.block = (ItemBridge) start.block;
+		this.bridgeType = start.block;
+		if (this.bridgeType instanceof DirectionBridge) {
+			this.bridgeType = Blocks.ductBridge;
+		}
 	}
 
 	public void update() {
@@ -60,7 +65,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		setRect(this.start.tileX(), this.start.tileY(), this.end.tileX(), this.end.tileY(), Tmp.r1);
 		Seq<Segment> intersecting = new Seq<>();
 		Bridges.getTree(this.linkDir()).intersect(Tmp.r1, segment -> {
-			if (segment.block == this.block && (segment.linkDir() == this.linkDir() || segment.end != this.end)) {
+			if (segment.bridgeType == this.bridgeType && (segment.linkDir() == this.linkDir() || segment.end != this.end)) {
 				intersecting.add(segment);
 			}
 		});
@@ -104,8 +109,8 @@ public class Segment implements QuadTree.QuadTreeObject {
 		int axis = this.linkDir() % 2;
 		// TODO: Massive mess
 		int emax = (this.max+1) & -2; // Rounding to next multiple of 2. Probably a better way to do this https://stackoverflow.com/a/9194117
-		this.xOffset = axis == 1 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
-		this.yOffset = axis == 0 ? this.block.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
+		this.xOffset = axis == 1 ? this.bridgeType.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
+		this.yOffset = axis == 0 ? this.bridgeType.offset + (this.selfIndex % 2 == 0 ? 0.5f : -0.5f)*tilesize * ((this.selfIndex+1) & -2)/emax : 0;
 	}
 
 	public void updateEnd() {
@@ -122,30 +127,13 @@ public class Segment implements QuadTree.QuadTreeObject {
 		out.height++;
 	}
 
-	public static ItemBridgeBuild getEnd(ItemBridgeBuild start, IntSeq bridges) {
-		ItemBridgeBuild next = start;
-		byte startDir = linkDir(start);
-		ItemBridge bridge = (ItemBridge) start.block;
-		while (Vars.world.build(next.link) instanceof ItemBridgeBuild nextLink && bridge.linkValid(next.tile, nextLink.tile) &&
-				next != nextLink && linkDir(next) == startDir) {
-			bridges.add(next.pos());
-			next = nextLink;
-		}
-		bridges.add(next.pos());
-		return next;
-	}
-
 	public boolean valid() {
 		return this.start.isValid() && this.end != this.start && this.end.isValid()
-				&& Bridges.segHead(this.start) && Bridges.linkValid(this.start) /*&& (ModMain2.linkValid(this.end) || ModMain2.segHead(this.end))*/;
+				&& segHead(this.start) && linkValid(this.start) /*&& (ModMain2.linkValid(this.end) || ModMain2.segHead(this.end))*/;
 	}
 
 	public byte linkDir() {
 		return this.start.relativeTo(this.end);
-	}
-
-	public static byte linkDir(ItemBridgeBuild build) {
-		return build.relativeTo(Point2.x(build.link), Point2.y(build.link));
 	}
 
 	public void draw(boolean highlight) {
@@ -205,7 +193,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		int linkDist = (int) Mathf.dstm(this.start.tileX(), this.start.tileY(), lx, ly);
 //		float alpha = ((Time.time / 100f) % linkDist)/linkDist;
 		float alpha = (Time.time / 2f % 100)/100;
-		int arrows = Mathf.ceil((float) linkDist / this.block.range);
+		int arrows = Mathf.ceil((float) linkDist / getRange(this.bridgeType));
 		Draw.color(Draw.getColor().inv());
 		Draw.z(Layer.overlayUI+0.1f);
 		for (int i = 0; i < arrows; i++) {
