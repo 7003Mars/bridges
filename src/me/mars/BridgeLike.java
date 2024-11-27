@@ -74,8 +74,6 @@ public class BridgeLike {
 
     public static boolean linkValid(Building build, Building link) {
         if (link == null) {
-            // TODO Removeme
-//            Log.err("Shouldnt be null?");
             return false;
         }
         if (build instanceof ItemBridgeBuild) {

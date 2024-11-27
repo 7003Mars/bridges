@@ -79,7 +79,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 			segment.occupied.set(index, true);
 		});
 		// Updating end and next segments
-		this.next = Bridges.findSeg(this.end.tileX(), this.end.tileY(), 1 - this.linkDir() % 2);
+		this.next = Bridges.findSeg(this.end.tileX(), this.end.tileY(), 1 - (this.linkDir() % 2));
 		if (this.next == null) {
 			// This segment may be connected to the middle of another segment
 			tmpSeq.clear();

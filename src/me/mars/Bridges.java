@@ -218,7 +218,7 @@ public class Bridges extends Mod {
 
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
 			if (!(blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge)) return;
-			// TODO: This may or may not fire late/early. It is an issue can't solve for now. Probably a source of bugs
+			// TODO: This may or may not fire late/early. It is an issue I can't solve for now. Probably a source of bugs
 			// TODO: Figure out what the second part of my comment meant
 			if (blockBuildEndEvent.config == null) {
 				lastConfigs.remove(bridge.pos());
@@ -275,44 +275,44 @@ public class Bridges extends Mod {
 		});
 
 		Events.on(BuildRotateEvent.class, buildRotateEvent -> {
-			if (!(buildRotateEvent.build instanceof DirectionBridgeBuild dirBridge)) return;
-			int rotation = dirBridge.rotation;
-			dirBridge.rotation = buildRotateEvent.previous;
-			DirectionBridgeBuild oldLink = dirBridge.findLink();
-			dirBridge.rotation = rotation;
+			if (!(buildRotateEvent.build instanceof DirectionBridgeBuild bridge)) return;
+			int rotation = bridge.rotation;
+			bridge.rotation = buildRotateEvent.previous;
+			DirectionBridgeBuild oldLink = bridge.findLink();
+			bridge.rotation = rotation;
 			// Try forming a segment for the disconnected bridge
 			if (oldLink != null) {
 				oldLink.occupied[buildRotateEvent.previous%4] = null;
 				formSegment(oldLink);
 			}
-			// Update any segments that pass through this bridge
-			Seq<Segment> intersected = new Seq<>();
-			both(tree -> {
-				intersected.clear();
-				tree.intersect(dirBridge.tileX(), dirBridge.tileY(), 1f, 1f, intersected);
-				for (Segment segment : intersected) {
-					if (segment.passing.contains(dirBridge.pos())) updateEnd(segment);
-				}
-			});
-			if (segHead(dirBridge)) {
+			if (segHead(bridge)) {
 				// Try forming a segment if the bridge is a seghead
-				formSegment(dirBridge);
+				formSegment(bridge);
 			} else {
 				// Remove leftover segment if this bridge is no longer a seghead
-				Segment oldSeg = findSeg(dirBridge.tileX(), dirBridge.tileY(), (buildRotateEvent.previous)%2);
+				Segment oldSeg = findSegStrict(bridge.tileX(), bridge.tileY(), buildRotateEvent.previous);
 				if (oldSeg != null) {
 					getTree(oldSeg.linkDir()).remove(oldSeg);
 					allSegments.remove(oldSeg);
 				}
 			}
+			// Update any segments that pass through this bridge
+			Seq<Segment> intersected = new Seq<>();
+			both(tree -> {
+				intersected.clear();
+				tree.intersect(bridge.tileX(), bridge.tileY(), 1f, 1f, intersected);
+				for (Segment segment : intersected) {
+					if (segment.passing.contains(bridge.pos())) updateEnd(segment);
+				}
+			});
 			// Remove leftover segment in new link if it is no longer a seghead
-			DirectionBridgeBuild link = dirBridge.findLink();
+			DirectionBridgeBuild link = bridge.findLink();
 			if (link != null) {
-				link.occupied[dirBridge.rotation%4] = dirBridge;
+				link.occupied[bridge.rotation%4] = bridge;
 				if (segHead(link)) {
 					formSegment(link);
 				} else {
-					Segment linkSeg = findSeg(link.tileX(), link.tileY(), (buildRotateEvent.previous)%2);
+					Segment linkSeg = findSeg(link.tileX(), link.tileY(), rotation);
 					if (linkSeg != null) {
 						getTree(linkSeg.linkDir()).remove(linkSeg);
 						allSegments.remove(linkSeg);
@@ -378,8 +378,7 @@ public class Bridges extends Mod {
 	static void bridgeRemoved(Building bridge) {
 		lastConfigs.remove(bridge.pos());
 		// Remove itself
-		// TODO IMPORTANT doesn't linkDir not return the axis?
-		Segment self = findSeg(bridge.tileX(), bridge.tileY(), linkDir(bridge));
+		Segment self = findSegStrict(bridge.tileX(), bridge.tileY(), linkDir(bridge));
 		if (self != null) {
 			getTree(self.linkDir()).remove(self);
 			allSegments.remove(self);
@@ -394,8 +393,7 @@ public class Bridges extends Mod {
 				if (link == null) continue;
 				link.occupied[incomingBridge.rotation%4] = incomingBridge;
 				if (!segHead(link)) {
-					// TODO this can be optimised to strict
-					Segment segment = findSeg(link.tileX(), link.tileY(), link.rotation%2);
+					Segment segment = findSegStrict(link.tileX(), link.tileY(), link.rotation);
 					if (segment == null) continue;
 					getTree(segment.linkDir()).remove(segment);
 					allSegments.remove(segment);
@@ -493,13 +491,15 @@ public class Bridges extends Mod {
 				Time.elapsed(), allSegments.count(segment -> segment.start.team == Vars.player.team()), allSegments.size);
 	}
 
-	public static Segment findSeg(int sx, int sy, int firstAxis) {
+	public static Segment findSeg(int sx, int sy, int firstAxisDir) {
+		// In theory an axis for firstAxisDir also works I think.
+		int firstAxis = firstAxisDir%2;
 		Seq<Segment> out = new Seq<>();
-		getTree((byte) (1-firstAxis)).intersect(sx, sy, 1, 1, out);
+		getTree(firstAxis).intersect(sx, sy, 1, 1, out);
 		Segment res = out.find(segment -> segment.start.tileX() == sx && segment.start.tileY() == sy);
 		if (res != null) return res;
 		out.clear();
-		getTree(firstAxis).intersect(sx, sy, 1, 1, out);
+		getTree(1-firstAxis).intersect(sx, sy, 1, 1, out);
 		return out.find(segment -> segment.start.tileX() == sx && segment.start.tileY() == sy);
 	}
 
