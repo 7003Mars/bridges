@@ -424,7 +424,7 @@ public class Bridges extends Mod {
 			}
 			if (segHead) {
 				// TODO linkDir() should never return -1 as the dirLink should always link to the dirLink which must exist?
-				dirLink.occupied[linkDir(link)%4] = null;
+				dirLink.occupied[linkDir(bridge)%4] = null;
 				formSegment(dirLink);
 			}
 		}
