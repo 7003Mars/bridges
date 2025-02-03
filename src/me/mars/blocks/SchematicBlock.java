@@ -6,7 +6,6 @@ import arc.struct.ObjectMap;
 import arc.util.Nullable;
 import mindustry.Vars;
 import mindustry.game.Schematic;
-import mindustry.gen.Icon;
 import mindustry.type.Category;
 import mindustry.world.Block;
 import mindustry.world.blocks.ItemSelection;
@@ -20,7 +19,7 @@ public class SchematicBlock extends ButtonBlock {
 	public Schematic schematic;
 	Block block;
 	public SchematicBlock(Schematic schem, Category cat) {
-		super(schem.name(), Icon.none.getRegion());
+		super(schem.name(), BlockHandler.nullIcon);
 		this.requirements(cat, schem.requirements().toArray());
 		this.schematic = schem;
 		this.init();
@@ -45,7 +44,7 @@ public class SchematicBlock extends ButtonBlock {
 	public void iconChange(@Nullable Block to) {
 		if (to == null) {
 			iconMapping.remove(this.schematic.name());
-			this.fullIcon = this.uiIcon = Icon.none.getRegion();
+			this.fullIcon = this.uiIcon = BlockHandler.nullIcon;
 		} else {
 			iconMapping.put(this.schematic.name(), to);
 			this.fullIcon = this.uiIcon = to.fullIcon;

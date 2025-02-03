@@ -1,5 +1,6 @@
 package me.mars.blocks;
 
+import arc.graphics.g2d.TextureAtlas;
 import arc.scene.ui.layout.Table;
 import mindustry.Vars;
 import mindustry.gen.Icon;
@@ -8,7 +9,7 @@ import mindustry.type.ItemStack;
 
 public class SchematicGuideBlock extends ButtonBlock {
 	public SchematicGuideBlock() {
-		super("Custom button help", Icon.eye.getRegion());
+		super("Custom button help", new TextureAtlas.AtlasRegion(Icon.eye.getRegion()));
 		requirements(Category.production, new ItemStack[]{});
 	}
 

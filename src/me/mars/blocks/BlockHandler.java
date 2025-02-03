@@ -2,9 +2,12 @@ package me.mars.blocks;
 
 import arc.Core;
 import arc.Events;
+import arc.graphics.g2d.TextureAtlas;
+import arc.graphics.g2d.TextureRegion;
 import arc.struct.ObjectMap;
 import arc.struct.OrderedMap;
 import arc.struct.Seq;
+import arc.util.Log;
 import arc.util.Reflect;
 import mindustry.Vars;
 import mindustry.content.Blocks;
@@ -22,6 +25,8 @@ import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.meta.BuildVisibility;
 
 public class BlockHandler {
+	static TextureRegion nullIcon = null;
+
 	public static OrderedMap<String, Category> glyphMapping = OrderedMap.of(
 			"\ue871", Category.turret,
 			"\ue85e", Category.production,
@@ -37,6 +42,7 @@ public class BlockHandler {
 	public static void init() {
 		Seq<SchematicBlock> schematicBlocks = new Seq<>();
 		Events.on(ContentInitEvent.class, contentInitEvent -> {
+			nullIcon = new TextureAtlas.AtlasRegion(Icon.none.getRegion());
 			if (Core.settings.getBool("bridging.custom-blocks", false)) {
 				new WeavedNode((PowerNode) Blocks.powerNode);
 				new ShortBridge((BufferedItemBridge) Blocks.itemBridge, 2);
@@ -58,7 +64,7 @@ public class BlockHandler {
 			SchematicBlock.loadMapping();
 			schematicBlocks.each(b -> {
 				Block block = SchematicBlock.iconMapping.get(b.schematic.name());
-				b.blockIcon = block != null? block.fullIcon : Icon.none.getRegion();
+				b.blockIcon = block != null? block.fullIcon : nullIcon;
 				b.loadIcon();
 			});
 			// Adding tags
