@@ -28,4 +28,5 @@ jobs:
       if: ${{startsWith(github.ref, 'refs/tags/')}}
       uses: svenstaro/upload-release-action@v2
       with:
+        release_name: ${{github.ref_name}}
         file: build/libs/${{ github.event.repository.name }}.jar
