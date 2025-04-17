@@ -151,7 +151,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 		// Add max tail offset
 		Seq<Segment> incomingP = tmpSeq.clear();
 		Bridges.getTree(1-linkAxis).intersect(this.start.tileX(), this.start.tileY(), 1, 1, incomingP);
-		incomingP.filter(segment -> segment.end.pos() == this.start.pos());
+		incomingP.retainAll(segment -> segment.end.pos() == this.start.pos());
 		float maxXOffset = 0, maxYOffset = 0;
 		if (incomingP.any()) {
 			// what the hell
