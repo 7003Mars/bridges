@@ -7,7 +7,6 @@ import arc.graphics.g2d.TextureRegion;
 import arc.struct.ObjectMap;
 import arc.struct.OrderedMap;
 import arc.struct.Seq;
-import arc.util.Log;
 import arc.util.Reflect;
 import mindustry.Vars;
 import mindustry.content.Blocks;
@@ -92,7 +91,7 @@ public class BlockHandler {
 		block.stats = target.stats;
 		block.health = target.health;
 		block.size = target.size;
-		block.buildCost = target.buildCost;
+		block.buildCostMultiplier = target.buildCostMultiplier;
 		block.requirements(target.category, target.requirements.clone());
 		block.buildVisibility = target.unlocked() ? target.buildVisibility : BuildVisibility.hidden;
 	}

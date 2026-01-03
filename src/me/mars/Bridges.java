@@ -162,7 +162,7 @@ public class Bridges extends Mod {
 		// Wait 2(?) ticks for incoming to be updated
 		Events.run(Trigger.update, () -> {
 			// Poll input stuff
-			if (state.isPlaying() && Core.input.keyDown(Binding.rotateplaced) && Math.abs(Core.input.axisTap(Binding.rotate)) > 0) {
+			if (state.isPlaying() && Core.input.keyDown(Binding.rotatePlaced) && Math.abs(Core.input.axisTap(Binding.rotate)) > 0) {
 				scroll+= (int)Core.input.axisTap(Binding.rotate);
 			}
 			// Run Segment logic
