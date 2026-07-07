@@ -531,8 +531,8 @@ public class Bridges extends Mod {
 	}
 
 	public static void both(Cons<QuadTree<Segment>> cons) {
-		cons.get(horiSeg);
-		cons.get(vertSeg);
+		if (horiSeg != null) cons.get(horiSeg);
+		if (vertSeg != null) cons.get(vertSeg);
 	}
 
 }
