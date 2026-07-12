@@ -137,7 +137,7 @@ public class Segment implements QuadTree.QuadTreeObject {
 	}
 
 	public void draw(boolean highlight) {
-		if (Bridges.debugMode) Vars.ui.showLabel(this.selfIndex+":"+this.max, 0.1f, this.start.x, this.start.y);
+		if (Bridges.debugMode) Vars.ui.showLabel(this.selfIndex+":"+this.max, -1, 0.1f, this.start.x, this.start.y);
 		int linkAxis = this.linkDir() % 2;
 		float x = this.start.x+this.xOffset, y = this.start.y+this.yOffset;
 		float lx = this.end.tileX(), ly = this.end.tileY();
