@@ -203,6 +203,7 @@ public class Bridges extends Mod {
 
 		// These work on the assumption that bridges are 1x1
 		Events.on(TilePreChangeEvent.class, tilePreChangeEvent -> {
+			if (world.isGenerating()) return;
 			Building building = tilePreChangeEvent.tile.build;
 			if (building instanceof ItemBridgeBuild || building instanceof DirectionBridgeBuild) {
 				bridgeRemoved(building);
@@ -210,6 +211,7 @@ public class Bridges extends Mod {
 		});
 
 		Events.on(TileChangeEvent.class, tileChangeEvent -> {
+			if (world.isGenerating()) return;
 			Building building = tileChangeEvent.tile.build;
 			if (building instanceof ItemBridgeBuild || building instanceof DirectionBridgeBuild) {
 				bridgeBuilt(building);
@@ -217,6 +219,7 @@ public class Bridges extends Mod {
 		});
 
 		Events.on(BlockBuildEndEvent.class, blockBuildEndEvent -> {
+			if (world.isGenerating()) return;
 			if (!(blockBuildEndEvent.tile.build instanceof ItemBridgeBuild bridge)) return;
 			// TODO: This may or may not fire late/early. It is an issue I can't solve for now. Probably a source of bugs
 			// TODO: Figure out what the second part of my comment meant
@@ -230,6 +233,7 @@ public class Bridges extends Mod {
 		});
 
 		Events.on(ConfigEvent.class, configEvent -> {
+			if (world.isGenerating()) return;
 			if (!(configEvent.tile instanceof ItemBridge.ItemBridgeBuild bridge)) return;
 			// Update those passing
 			Seq<Segment> intersected = new Seq<>();
@@ -275,6 +279,7 @@ public class Bridges extends Mod {
 		});
 
 		Events.on(BuildRotateEvent.class, buildRotateEvent -> {
+			if (world.isGenerating()) return;
 			if (!(buildRotateEvent.build instanceof DirectionBridgeBuild bridge)) return;
 			int rotation = bridge.rotation;
 			bridge.rotation = buildRotateEvent.previous;
@@ -531,8 +536,8 @@ public class Bridges extends Mod {
 	}
 
 	public static void both(Cons<QuadTree<Segment>> cons) {
-		if (horiSeg != null) cons.get(horiSeg);
-		if (vertSeg != null) cons.get(vertSeg);
+		cons.get(horiSeg);
+		cons.get(vertSeg);
 	}
 
 }
